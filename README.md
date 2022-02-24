@@ -1,3 +1,3 @@
 # MAFIA
 
-MAtin's Flexible anIsotropic spAtial model
+MArtin's Flexible anIsotropic spAtial model
