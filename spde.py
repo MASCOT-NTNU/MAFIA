@@ -22,6 +22,11 @@ class spde:
         self.Q_fac = cholesky(self.Q)
         self.sigma = np.load('./models/sigma.npy')
         self.mu = np.load('./models/prior.npy')
+        tmp = np.load('./models/grid.npy')
+        self.lats = tmp[:,2]
+        self.lons = tmp[:,3]
+        self.x = tmp[:,0]
+        self.y = tmp[:,1]
 
     def sample(self,n = 1):
         data = np.zeros((self.n,n))
