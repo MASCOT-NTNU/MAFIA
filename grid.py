@@ -1,34 +1,46 @@
 import numpy as np
-import netCDF4
 
 class Grid:
     def __init__(self):
-        self.setGrid()
-    
-    def setGrid(self):
-        self.M = 45
-        self.N = 45
-        self.P = 10
-        xdom = np.arange(80,125)
-        ydom = np.arange(24,24+45)
-        zdom = np.arange(0,20,2)
-        fp='data/samples_2021.05.26.nc'
-        nc = netCDF4.Dataset(fp)
-        data = np.array(nc['salinity'][:,zdom,ydom,xdom])
-        self.x = np.array(nc['xc'][xdom])
-        self.y = np.array(nc['yc'][ydom])
-        self.z = np.array(nc['zc'][zdom])
+        self.A = 40
+        self.B = 40
+        self.C = 40
+        self.M = 30
+        self.N = 30
+        self.P = 30
+        self.grid.n = self.M*self.N*self.P
+        self.hx = self.A/self.M
+        self.hy = self.B/self.N
+        self.hz = self.C/self.P
+        self.x = np.linspace(self.hx/2,self.A-self.hx/2,self.M)
+        self.y = np.linspace(self.hy/2,self.B-self.hy/2,self.N)
+        self.z = np.linspace(self.hz/2,self.C-self.hz/2,self.P)
+        self.sx, self.sy, self.sz = np.meshgrid(self.x,self.y,self.z)
+        self.sx = self.sx.flatten()
+        self.sy = self.sy.flatten()
+        self.sz = self.sz.flatten()
+        self.bs = None
+        self.bsH = None
+
+    def setGrid(self, M = None, N = None, P = None, x = None, y = None, z = None):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.M =  M
+        self.N =  N 
+        self.P = P 
         self.A = self.x.max()-self.x.min()
-        self.B = self.y.max()-self.y.min()
+        self.B =  self.y.max()-self.y.min()
         self.C = self.z.max()-self.z.min()
         self.hx = self.A/(self.M-1)
-        self.hy = self.B/(self.N-1)
+        self.hy = self.B/(self.N-1) 
         self.hz = self.C/(self.P-1)
         sx, sy, sz = np.meshgrid(self.x,self.y,self.z)
         self.sx = sx.flatten()
         self.sy = sy.flatten()
         self.sz = sz.flatten()
-        self.data = data.swapaxes(1,3).swapaxes(1,2).reshape(data.shape[0],self.M*self.N*self.P).swapaxes(0,1)
+        self.basisN()
+        self.basisH()
             
 
     def basis(self,dx = 0 , dy = 0, dz = 0, d = 2):
@@ -86,7 +98,7 @@ class Grid:
         for i in range(3):
             for j in range(3):
                 for k in range(3):
-                    bs[:,i*3*3+j*3+k] = bx[:,i]*by[:,j]*bz[:,k]
+                    bs[:,i*3*3+j*3+k] = bx[:,j]*by[:,i]*bz[:,k]
         self.bs = bs
 
 
@@ -107,14 +119,14 @@ class Grid:
                 bx,by,bz = self.basis(dz=-1/2*self.hz)
             elif (i == 5):
                 bx,by,bz = self.basis(dz=1/2*self.hz)
-            bxA[:,i] = bx
-            byA[:,i] = by
-            bzA[:,i] = bz
+            bxA[:,i,:] = bx
+            byA[:,i,:] = by
+            bzA[:,i,:] = bz
         bs = np.zeros((self.M*self.N*self.P,6,3*3*3))
         for i in range(3):
             for j in range(3):
                 for k in range(3):
-                    bs[:,:,i*3*3+j*3+k] = bxA[:,:,i]*byA[:,:,j]*bzA[:,:,k]
+                    bs[:,:,i*3*3+j*3+k] = bxA[:,:,j]*byA[:,:,i]*bzA[:,:,k]
         self.bsH = bs
 
     def evalB(self,par,bs = None, d=None):
@@ -132,7 +144,3 @@ class Grid:
         if bs is None:
             bs = self.bsH
         return(bs@par)
-
-    def dropMemory(self):
-        self.bs = None
-        self.bsH = None
