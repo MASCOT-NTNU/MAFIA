@@ -42,13 +42,13 @@ class spde:
     def candidate(self,pos):
         ks = pos[1]*self.M*self.P + pos[0]*self.P + pos[2]
         Q = self.Q.copy()
-        Q[ks,ks] = self.Q[ks,ks] + self.sigma[0]**2 + self.sigma[1]**2
+        Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
         Q_fac = cholesky(Q)
         return(self.mvar(Q_fac = Q_fac))
 
     def update(self,rel,pos):
         ks = pos[1]*self.M*self.P + pos[0]*self.P + pos[2]
-        self.Q[ks,ks] = self.Q[ks,ks] + self.sigma[0]**2 + self.sigma[1]**2
+        self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
         F = np.zeros(self.M*self.N*self.P)
         F[ks] = 1
         V = self.Q_fac.solve_A(F.transpose())
