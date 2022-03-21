@@ -15,8 +15,8 @@ class Kernel:
         self.knowledge = knowledge
         pass
 
-    def get_eibv_1d(self):
-        Variance = self.knowledge.spde_model.mvar()
+    def get_eibv_1d(self, ind_k):
+        Variance = self.knowledge.spde_model.candidate(ind_k)#
         EIBV = 0
         for i in range(self.knowledge.mu_cond.shape[0]):
             EIBV += (mvn.mvnun(-np.inf, self.knowledge.threshold, self.knowledge.mu_cond[i], Variance[i])[0] -

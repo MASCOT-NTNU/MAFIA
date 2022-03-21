@@ -2,11 +2,11 @@
 This script only contains the location
 Author: Yaolin Ge
 Contact: yaolin.ge@ntnu.no
-Date: 2022-03-16
+Date: 2022-03-21
 """
 
 import numpy as np
-from usr_func import latlon2xy
+from usr_func import latlondepth2xyz, latlon2xy
 from MAFIA.Simulation.Config.Config import *
 
 
@@ -21,7 +21,7 @@ class Location:
 
 
 def get_distance_between_locations(loc1, loc2):
-    dist_x, dist_y = latlon2xy(loc1.lat, loc1.lon, loc2.lat, loc2.lon)
-    dist_z = np.abs(loc1.depth - loc2.depth)
+    dist_x, dist_y, dist_z = latlondepth2xyz(loc1.lat, loc1.lon, loc1.depth,
+                                             loc2.lat, loc2.lon, loc2.depth)
     return np.sqrt(dist_x ** 2 + dist_y ** 2 + dist_z ** 2)
 
