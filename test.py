@@ -55,7 +55,12 @@ plt.imshow(v[:, :, 0], origin="lower", cmap="Paired", vmin=0, vmax=32)
 plt.colorbar()
 plt.show()
 
+#%%
+import numpy as np
+t = np.load('MAFIA/models/-NI.npy')
 
+#%%
+# t1 = t.reshape(45, 45, 10)
 
 
 
