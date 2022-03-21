@@ -56,15 +56,13 @@ class spde:
         else:
             return(Q_fac)
 
-    def candidate(self,pos,n=40):
-        ks = pos[1]*self.M*self.P + pos[0]*self.P + pos[2]
+    def candidate(self,ks,n=40):
         Q = self.Q.copy()
         Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
         Q_fac = cholesky(Q)
         return(self.mvar(Q_fac = Q_fac,n=n))
 
-    def update(self,rel,pos):
-        ks = pos[1]*self.M*self.P + pos[0]*self.P + pos[2]
+    def update(self,rel,ks):
         self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
         F = np.zeros(self.M*self.N*self.P)
         F[ks] = 1
