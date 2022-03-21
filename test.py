@@ -57,11 +57,14 @@ plt.show()
 
 #%%
 import numpy as np
-t = np.load('MAFIA/models/-NI.npy')
+lat = np.load('MAFIA/models/lats.npy')
+lon = np.load('MAFIA/models/lons.npy')
+depth = np.load('MAFIA/models/debth.npy')
 
 #%%
 # t1 = t.reshape(45, 45, 10)
-
+plt.plot(lon, lat, 'k.')
+plt.show()
 
 
 

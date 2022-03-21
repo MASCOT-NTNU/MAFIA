@@ -2,7 +2,7 @@
 This config file contains all constants used for simulation
 Author: Yaolin Ge
 Contact: yaolin.ge@ntnu.no
-Date: 2022-03-16
+Date: 2022-03-21
 """
 
 # == GP kernel
@@ -22,7 +22,7 @@ DISTANCE_TOLERANCE = 500
 # ==
 
 # == Grid
-DISTANCE_NEIGHBOUR = 120
+DISTANCE_NEIGHBOUR = 32
 DISTANCE_NEIGHBOUR_RADAR = 150
 LATITUDE_ORIGIN = 0
 LONGITUDE_ORIGIN = 0

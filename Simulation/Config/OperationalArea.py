@@ -31,6 +31,14 @@ Sometimes the geometry will have multiple polygons due to merging of different p
 Be careful with the check conditions
 '''
 
+PATH_FILE = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
+
+boundary = np.load(PATH_FILE+"models/grid.npy")
+boundary[[2, -1]] = boundary[[-1, 2]]
+
+df = pd.DataFrame(boundary[:, 2:], columns=['lat', 'lon'])
+df.to_csv(PATH_FILE+"GIS/boundary.csv", index=False)
+
 
 class OpArea:
 
