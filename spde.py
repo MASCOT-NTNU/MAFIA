@@ -10,6 +10,20 @@ class spde:
         self.P = 10
         self.n = self.M*self.N*self.P
 
+    
+    def reduce(self,x,y,z):
+        tx,ty,tz = np.meshgrid(np.arange(x[0],x[1]),np.arange(y[0],y[1]),np.arange(z[0],z[1]))
+        tx = tx.flatten()
+        ty = ty.flatten()
+        tz = tz.flatten()
+        ks = ty*self.M*self.P + tx*self.P + tz
+        self.Q = self.Q[ks,:][:,ks]
+        self.Q_fac = cholesky(self.Q)
+        self.M = x[1]-x[0]
+        self.N = y[1]-y[0]
+        self.P = z[1]-z[0]
+        self.n = self.M*self.N*self.P
+
     # fix par for models
     def define(self, model = 3):
         if (model==1):
@@ -17,7 +31,7 @@ class spde:
         elif (model==2):
             tmp = np.load('./models/SINMOD-NI.npy')
         elif (model==3):
-            tmp = np.load('./models/SINMOD-NA.npy')
+            tmp = np.load('./models/SINMOD-NA2-full.npy')
         self.Q = sparse.csc_matrix((np.array(tmp[:,2],dtype = "float32"), (tmp[:,0].astype('int32'), tmp[:,1].astype('int32'))), shape=(20250,20250))
         self.Q_fac = cholesky(self.Q)
         self.sigma = np.load('./models/sigma.npy')
@@ -44,12 +58,12 @@ class spde:
         else:
             return(Q_fac)
 
-    def candidate(self,pos):
+    def candidate(self,pos,n=40):
         ks = pos[1]*self.M*self.P + pos[0]*self.P + pos[2]
         Q = self.Q.copy()
         Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
         Q_fac = cholesky(Q)
-        return(self.mvar(Q_fac = Q_fac))
+        return(self.mvar(Q_fac = Q_fac,n=n))
 
     def update(self,rel,pos):
         ks = pos[1]*self.M*self.P + pos[0]*self.P + pos[2]
