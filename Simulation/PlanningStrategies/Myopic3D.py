@@ -25,31 +25,31 @@ class MyopicPlanning3D:
 
     def find_next_waypoint(self):
         self.filter_neighbouring_loc()
-        # t1 = time.time()
-        # eibv = []
-        # for k in range(len(self.knowledge.ind_neighbour_filtered)):
-        #     print("ind k: ", self.knowledge.ind_neighbour_filtered[k])
-        #     eibv.append(self.kernel.get_eibv_1d(self.knowledge.ind_neighbour_filtered[k]))
-        # t2 = time.time()
-        # if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
-        #     while True:
-        #         self.knowledge.next_location = self.search_for_new_location()
-        #         # TODO: add go home function
-        # else:
-        #     self.knowledge.next_location = \
-        #         self.get_location_from_ind(self.knowledge.ind_neighbour_filtered[np.argmin(np.array(eibv))])
+        t1 = time.time()
+        eibv = []
+        for k in range(len(self.knowledge.ind_neighbour_filtered)):
+            # print("ind k: ", self.knowledge.ind_neighbour_filtered[k])
+            eibv.append(self.kernel.get_eibv_1d(self.knowledge.ind_neighbour_filtered[k]))
+        t2 = time.time()
+        if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
+            while True:
+                self.knowledge.next_location = self.search_for_new_location()
+                # TODO: add go home function
+        else:
+            self.knowledge.next_location = \
+                self.get_location_from_ind(self.knowledge.ind_neighbour_filtered[np.argmin(np.array(eibv))])
         # print(eibv)
-        # print("Next location: ",
-        #       self.knowledge.next_location.lat,
-        #       self.knowledge.next_location.lon,
-        #       self.knowledge.next_location.depth)
-        # print("Time consumed: ", t2 - t1)
+        print("Next location: ",
+              self.knowledge.next_location.lat,
+              self.knowledge.next_location.lon,
+              self.knowledge.next_location.depth)
+        print("Time consumed: ", t2 - t1)
 
     def filter_neighbouring_loc(self):
         t1 = time.time()
         id = []
         self.ind_neighbour_locations = self.knowledge.neighbour_hash_table[self.knowledge.ind_current_location[0]]
-        print("Before filtering: ", self.ind_neighbour_locations)
+        # print("Before filtering: ", self.ind_neighbour_locations)
         vec1 = self.get_vector_between_locations(self.knowledge.previous_location, self.knowledge.current_location)
         for i in range(len(self.ind_neighbour_locations)):
             if self.ind_neighbour_locations[i] != self.knowledge.ind_current_location:
@@ -59,8 +59,8 @@ class MyopicPlanning3D:
                     id.append(self.ind_neighbour_locations[i])
         t2 = time.time()
         self.knowledge.ind_neighbour_filtered = np.unique(np.array(id))
-        print("Filtering takes: ", t2 - t1)
-        print("after filtering: ", self.knowledge.ind_neighbour_filtered)
+        # print("Filtering takes: ", t2 - t1)
+        # print("after filtering: ", self.knowledge.ind_neighbour_filtered)
 
     def get_vector_between_locations(self, loc_start, loc_end):
         dx, dy, dz = latlondepth2xyz(loc_end.lat, loc_end.lon, loc_end.depth,

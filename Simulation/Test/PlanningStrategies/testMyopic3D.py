@@ -22,9 +22,10 @@ current_location = Location(63.45121, 10.40673, 1.5)
 spde_model = spde(model=2)
 
 
-#%%
-knowledge = Knowledge(coordinates=coordinates, neighbour_hash_table=neighbour_hash_table, threshold=THRESHOLD,
-                      spde_model=spde_model, previous_location=previous_location, current_location=current_location)
+mu_prior = spde_model.mu
+knowledge = Knowledge(coordinates=coordinates, neighbour_hash_table=neighbour_hash_table, mu_cond=mu_prior,
+                      threshold=THRESHOLD, spde_model=spde_model, previous_location=previous_location,
+                      current_location=current_location)
 
 t = MyopicPlanning3D(knowledge=knowledge)
 # t.knowledge.ind_current_location

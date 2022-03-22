@@ -6,11 +6,12 @@ from MAFIA.Simulation.Config.Config import FILEPATH
 
 class spde:
     def __init__(self, model = 6):
-        self.define(model = model)
         self.M = 45
         self.N = 45
         self.P = 11
         self.n = self.M*self.N*self.P
+        self.define(model=model)
+        print("he")
 
     
     def reduce(self,x,y,z):
