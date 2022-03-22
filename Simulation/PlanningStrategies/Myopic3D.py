@@ -12,6 +12,7 @@ next_location = MyopicPlanning3D(Knowledge, Experience).next_waypoint
 
 from usr_func import *
 from MAFIA.Simulation.Field.Grid.Location import *
+from MAFIA.Simulation.Kernel.Kernel import Kernel
 import time
 
 
@@ -19,26 +20,30 @@ class MyopicPlanning3D:
 
     def __init__(self, knowledge):
         self.knowledge = knowledge
+        self.kernel = Kernel(self.knowledge)
         self.find_next_waypoint()
 
     def find_next_waypoint(self):
         self.filter_neighbouring_loc()
         # t1 = time.time()
-        # id = self.knowledge.ind_cand_filtered
         # eibv = []
-        # for k in range(len(id)):
-        #     F = getFVector(id[k], self.knowledge.coordinates.shape[0])
-        #     eibv.append(get_eibv_1d(self.knowledge.threshold, self.knowledge.mu_cond,
-        #                             self.knowledge.Sigma_cond, F, self.knowledge.kernel.R))
+        # for k in range(len(self.knowledge.ind_neighbour_filtered)):
+        #     print("ind k: ", self.knowledge.ind_neighbour_filtered[k])
+        #     eibv.append(self.kernel.get_eibv_1d(self.knowledge.ind_neighbour_filtered[k]))
         # t2 = time.time()
         # if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
         #     while True:
-        #         ind_next = self.search_for_new_location()
-        #         if not ind_next in self.knowledge.ind_visited:
-        #             self.knowledge.ind_next = ind_next
-        #             break
+        #         self.knowledge.next_location = self.search_for_new_location()
+        #         # TODO: add go home function
         # else:
-        #     self.knowledge.ind_next = self.knowledge.ind_cand_filtered[np.argmin(np.array(eibv))]
+        #     self.knowledge.next_location = \
+        #         self.get_location_from_ind(self.knowledge.ind_neighbour_filtered[np.argmin(np.array(eibv))])
+        # print(eibv)
+        # print("Next location: ",
+        #       self.knowledge.next_location.lat,
+        #       self.knowledge.next_location.lon,
+        #       self.knowledge.next_location.depth)
+        # print("Time consumed: ", t2 - t1)
 
     def filter_neighbouring_loc(self):
         t1 = time.time()
@@ -70,13 +75,13 @@ class MyopicPlanning3D:
     def search_for_new_location(self):
         ind_next = np.abs(get_excursion_prob_1d(self.knowledge.mu_cond, self.knowledge.Sigma_cond,
                                                 self.knowledge.threshold) - .5).argmin()
-        return ind_next
+        return self.get_location_from_ind(ind_next)
 
-    @property
-    def next_waypoint(self):
-        return self.knowledge.coordinates[self.knowledge.ind_next, 0], \
-               self.knowledge.coordinates[self.knowledge.ind_next, 1], \
-               self.knowledge.coordinates[self.knowledge.ind_next, 2]
+    # @property
+    # def next_waypoint(self):
+    #     return self.knowledge.coordinates[self.knowledge.ind_next, 0], \
+    #            self.knowledge.coordinates[self.knowledge.ind_next, 1], \
+    #            self.knowledge.coordinates[self.knowledge.ind_next, 2]
 
 
 

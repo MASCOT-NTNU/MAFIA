@@ -45,6 +45,7 @@ BUDGET = 8000
 NUM_STEPS = 80
 FIGPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/GOOGLE/fig/Sim_2DNidelva/"
 PATH_FILE = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/GOOGLE/Simulation_2DNidelva/"
+FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
 # PATH_BORDER = PATH_FILE + "Config/OpArea.csv"
 # PATH_OBSTACLE = PATH_FILE + "Config/Munkholmen.csv"
 PATH_BORDER = PATH_FILE + "Config/Polygon_border.csv"

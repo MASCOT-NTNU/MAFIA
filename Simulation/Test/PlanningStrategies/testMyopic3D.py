@@ -17,10 +17,14 @@ neighbour_hash_table = pickle.load(neighbour_hash_table_filehandler)
 neighbour_hash_table_filehandler.close()
 
 
-current_location = Location(63.45121, 10.40673, .5)
+previous_location = Location(63.45121, 10.40673, .5)
+current_location = Location(63.45121, 10.40673, 1.5)
+spde_model = spde(model=2)
 
+
+#%%
 knowledge = Knowledge(coordinates=coordinates, neighbour_hash_table=neighbour_hash_table, threshold=THRESHOLD,
-                      spde_model=spde, previous_location=current_location, current_location=current_location)
+                      spde_model=spde_model, previous_location=previous_location, current_location=current_location)
 
 t = MyopicPlanning3D(knowledge=knowledge)
 # t.knowledge.ind_current_location

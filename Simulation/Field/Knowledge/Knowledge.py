@@ -23,7 +23,7 @@ class Knowledge:
         self.ind_current_location = get_ind_at_location(self.coordinates, self.current_location)
         self.neighbour_hash_table = neighbour_hash_table
         self.threshold = threshold
-        self.kernel = spde_model
+        self.spde_model = spde_model
 
         # learned
         self.ind_neighbour_filtered = []

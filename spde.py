@@ -1,6 +1,8 @@
 import numpy as np
 from scipy import sparse
 from sksparse.cholmod import cholesky
+from MAFIA.Simulation.Config.Config import FILEPATH
+
 
 class spde:
     def __init__(self, model = 6):
@@ -27,14 +29,14 @@ class spde:
     # fix par for models
     def define(self, model = 2):
         if (model==1):
-            tmp = np.load('./models/SINMOD-NAs.npy')
+            tmp = np.load(FILEPATH + 'models/SINMOD-NAs.npy')
         elif (model==2):
-            tmp = np.load('./models/SINMOD-NAf.npy')
+            tmp = np.load(FILEPATH + 'models/SINMOD-NAf.npy')
         self.Q = sparse.csc_matrix((np.array(tmp[:,2],dtype = "float32"), (tmp[:,0].astype('int32'), tmp[:,1].astype('int32'))), shape=(20250,20250))
         self.Q_fac = cholesky(self.Q)
-        self.sigma = np.load('./models/sigma.npy')
-        self.mu = np.load('./models/prior.npy')
-        tmp = np.load('./models/grid.npy')
+        self.sigma = np.load(FILEPATH + 'models/sigma.npy')
+        self.mu = np.load(FILEPATH + 'models/prior.npy')
+        tmp = np.load(FILEPATH + 'models/grid.npy')
         self.lats = tmp[:,2]
         self.lons = tmp[:,3]
         self.x = tmp[:,0]
