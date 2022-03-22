@@ -9,7 +9,7 @@ class spde:
         self.define(model = model)
         self.M = 45
         self.N = 45
-        self.P = 10
+        self.P = 11
         self.n = self.M*self.N*self.P
 
     
@@ -32,9 +32,9 @@ class spde:
             tmp = np.load(FILEPATH + 'models/SINMOD-NAs.npy')
         elif (model==2):
             tmp = np.load(FILEPATH + 'models/SINMOD-NAf.npy')
-        self.Q = sparse.csc_matrix((np.array(tmp[:,2],dtype = "float32"), (tmp[:,0].astype('int32'), tmp[:,1].astype('int32'))), shape=(20250,20250))
+        self.Q = sparse.csc_matrix((np.array(tmp[:,2],dtype = "float32"), (tmp[:,0].astype('int32'), tmp[:,1].astype('int32'))), shape=(self.n,self.n))
         self.Q_fac = cholesky(self.Q)
-        self.sigma = np.load(FILEPATH + 'models/sigma.npy')
+        self.sigma = np.load(FILEPATH +'models/sigma.npy')
         self.mu = np.load(FILEPATH + 'models/prior.npy')
         tmp = np.load(FILEPATH + 'models/grid.npy')
         self.lats = tmp[:,2]
