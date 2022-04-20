@@ -23,8 +23,8 @@ class Knowledge:
         self.current_location = current_location
 
         # computed
-        self.ind_previous_location = get_ind_at_location3d_wgs(self.coordinates, self.previous_location)
-        self.ind_current_location = get_ind_at_location3d_wgs(self.coordinates, self.current_location)
+        self.ind_previous_location = None
+        self.ind_current_location = None
         self.excursion_prob = None
         self.excursion_set = None
 

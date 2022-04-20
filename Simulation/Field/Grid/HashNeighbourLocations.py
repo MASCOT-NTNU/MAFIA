@@ -9,8 +9,6 @@ from MAFIA.Simulation.Config.Config import *
 from usr_func import *
 import pickle
 
-FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
-
 
 class HashNeighbourLocations:
 
@@ -25,12 +23,9 @@ class HashNeighbourLocations:
         self.neighbour_hash_table = dict()
         t1 = time.time()
         for i in range(self.coordinates.shape[0]):
-            delta_x, delta_y, delta_z = latlondepth2xyz(self.coordinates[:, 0],
-                                                        self.coordinates[:, 1],
-                                                        self.coordinates[:, 2],
-                                                        self.coordinates[i, 0],
-                                                        self.coordinates[i, 1],
-                                                        self.coordinates[i, 2])
+            delta_x = self.coordinates[:, -3] - self.coordinates[i, -3]
+            delta_y = self.coordinates[:, -2] - self.coordinates[i, -2]
+            delta_z = self.coordinates[:, -1] - self.coordinates[i, -1]
             self.distance_euclidean = np.sqrt(delta_x ** 2 + delta_y ** 2 + delta_z ** 2)
             self.distance_ellipsoid = (delta_x ** 2 / (1.5 * DISTANCE_LATERAL) ** 2) + \
                                       (delta_y ** 2 / (1.5 * DISTANCE_LATERAL) ** 2) + \
@@ -97,7 +92,7 @@ class HashNeighbourLocations:
 
         # tight layout
         fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-        plotly.offline.plot(fig, filename="/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/fig/neighbour.html",
+        plotly.offline.plot(fig, filename=FIGPATH+"neighbour.html",
                             auto_open=True)
 
 if __name__ == "__main__":

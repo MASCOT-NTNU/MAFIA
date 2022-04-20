@@ -19,7 +19,6 @@ from GOOGLE.Simulation_2DNidelva.Tree.Knowledge import Knowledge
 
 
 class Simulator:
-
     trajectory = []
     distance_travelled = 0
     waypoint_return_counter = 0

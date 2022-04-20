@@ -72,6 +72,9 @@ class spde:
         V = self.Q_fac.solve_A(F.transpose())
         W = F@V + self.sigma[0]**2 + self.sigma[1]**2
         U = V/W
+        print(F.shape)
+        print(self.mu.shape)
+        print(rel.shape)
         c = F@self.mu - rel
         self.mu = self.mu - U.transpose()*c
         self.Q_fac = cholesky(self.Q)

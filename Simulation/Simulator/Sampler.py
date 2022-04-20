@@ -8,14 +8,12 @@ Date: 2022-03-18
 
 from usr_func import *
 from sklearn.metrics import mean_squared_error
-from MAFIA.Simulation.Kernel.Kernel import Kernel
 
 
 class Sampler:
 
     def __init__(self, knowledge, ground_truth, ind_sample):
         self.knowledge = knowledge
-        self.kernel = Kernel(self.knowledge)
         self.ground_truth = ground_truth
         self.ind_sample = ind_sample
         self.sample()
@@ -40,8 +38,5 @@ class Sampler:
         # self.knowledge.integratedBernoulliVariance.append(eibv)
         # self.knowledge.distance_travelled.append(dist + self.knowledge.distance_travelled[-1])
 
-    # def getDistanceTravelled(self):
-    #
-    #     return dist
 
 
