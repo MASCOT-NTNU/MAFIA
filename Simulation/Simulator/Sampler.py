@@ -24,7 +24,7 @@ class Sampler:
         self.knowledge.trajectory.append(self.knowledge.current_location)
         # eibv = self.kernel.get_eibv_1d(self.ind_sample)
         # dist = self.getDistanceTravelled()
-        print(self.ground_truth.)
+        # print(self.ground_truth.)
         self.knowledge.spde_model.update(rel = self.ground_truth[self.ind_sample].reshape(-1, 1), ks = self.ind_sample)
         self.knowledge.mu_cond = self.knowledge.spde_model.mu
         self.knowledge.Sigma_cond_diag = self.knowledge.spde_model.mvar()

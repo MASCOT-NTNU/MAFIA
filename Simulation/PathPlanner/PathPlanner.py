@@ -49,14 +49,14 @@ class PathPlanner:
         self.ground_truth = pd.read_csv(path_mu_truth).to_numpy()
 
     def run(self):
-        self.ind_sample = get_ind_at_location(self.coordinates, self.starting_location)
+        self.ind_sample = get_ind_at_location3d_wgs(self.coordinates, self.starting_location)
         for i in range(self.num_steps):
             print("Step No. ", i)
             self.trajectory.append(self.knowledge.current_location)
             Sampler(self.knowledge, self.ground_truth, self.ind_sample)
             myopic3d = MyopicPlanning3D(knowledge=self.knowledge)
             self.next_location = self.knowledge.next_location
-            self.ind_sample = get_ind_at_location(self.coordinates, self.next_location)
+            self.ind_sample = get_ind_at_location3d_wgs(self.coordinates, self.next_location)
             self.knowledge.step_no = i
             KnowledgePlot(knowledge=self.knowledge, vmin=0, vmax=32,
                           filename=FILEPATH + "fig/myopic3d/P_{:03d}".format(i), html=False)
@@ -69,5 +69,10 @@ if __name__ == "__main__":
     p.run()
 
 
+#%%
+path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/models/depth.npy'
+
+df = np.load(path)
+df.shape
 
 
