@@ -14,7 +14,7 @@ from MAFIA.Simulation.Plotting.KnowledgePlot import KnowledgePlot
 from MAFIA.Simulation.Config.Config import *
 from MAFIA.spde import spde
 import pickle
-
+#%%
 
 class PathPlanner:
 
@@ -85,11 +85,15 @@ sal = np.load(FILEPATH + "models/prior.npy")
 lats = np.load(FILEPATH + "models/lats.npy")
 lons = np.load(FILEPATH + "models/lons.npy")
 depth = np.load(FILEPATH + "models/depth.npy")
+grid = np.load(FILEPATH + "models/grid.npy")
 print(os.listdir(FILEPATH+"models/"))
 l = sal.shape[0]
 lats = lats[:l]
 lons = lons[:l]
 depth = depth[:l]
+#%%
+
+#%%
 
 import plotly.graph_objects as go
 import numpy as np
