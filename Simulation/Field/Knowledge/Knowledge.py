@@ -10,11 +10,12 @@ from usr_func import get_ind_at_location3d_wgs
 
 class Knowledge:
 
-    def __init__(self, coordinates=None, neighbour_hash_table=None, threshold=None, spde_model=None,
-                 previous_location=None, current_location=None):
+    def __init__(self, coordinates_grid=None, coordinates_waypoint=None, neighbour_hash_table_waypoint=None, threshold=None,
+                 spde_model=None, previous_location=None, current_location=None):
         # known
-        self.coordinates = coordinates
-        self.neighbour_hash_table = neighbour_hash_table
+        self.coordinates_grid = coordinates_grid
+        self.coordinates_waypoint = coordinates_waypoint
+        self.neighbour_hash_table_waypoint = neighbour_hash_table_waypoint
         self.threshold = threshold
         self.spde_model = spde_model
         self.mu_cond = self.spde_model.mu
@@ -23,13 +24,13 @@ class Knowledge:
         self.current_location = current_location
 
         # computed
-        self.ind_previous_location = None
-        self.ind_current_location = None
+        self.ind_previous_location_waypoint = None
+        self.ind_current_location_waypoint = None
         self.excursion_prob = None
         self.excursion_set = None
 
         # learned
-        self.ind_neighbour_filtered = []
+        self.ind_neighbour_filtered_waypoint = []
         self.next_location = None
         self.trajectory = []
         self.step_no = 0

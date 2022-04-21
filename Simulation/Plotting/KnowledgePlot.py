@@ -15,14 +15,14 @@ from plotly.subplots import make_subplots
 import os
 
 
-
 class KnowledgePlot:
 
     def __init__(self, knowledge=None, vmin=28, vmax=30, filename="mean", html=False):
         if knowledge is None:
             raise ValueError("")
         self.knowledge = knowledge
-        self.coordinates = self.knowledge.coordinates_wgs
+        # self.coordinates = self.knowledge.coordinates_waypoint
+        self.coordinates = self.knowledge.coordinates_grid
         self.vmin = vmin
         self.vmax = vmax
         self.filename = filename
@@ -30,42 +30,42 @@ class KnowledgePlot:
         self.plot()
 
     def plot(self):
-        lat = self.coordinates[:, 0]
-        lon = self.coordinates[:, 1]
-        depth = self.coordinates[:, 2]
-        depth_layer = np.unique(depth)
-        number_of_plots = len(depth_layer)
+        x = self.coordinates[:, 0]
+        y = self.coordinates[:, 1]
+        z = self.coordinates[:, 2]
+        z_layer = np.unique(z)
+        number_of_plots = len(z_layer)
 
         # print(lat.shape)
-        points_mean, values_mean = interpolate_3d(lon, lat, depth, self.knowledge.mu_cond)
-        points_std, values_std = interpolate_3d(lon, lat, depth, np.sqrt(self.knowledge.Sigma_cond_diag))
-        points_ep, values_ep = interpolate_3d(lon, lat, depth, self.knowledge.excursion_prob)
+        points_mean, values_mean = interpolate_3d(y, x, z, self.knowledge.mu_cond)
+        # points_std, values_std = interpolate_3d(y, x, z, np.sqrt(self.knowledge.Sigma_cond_diag))
+        points_ep, values_ep = interpolate_3d(y, x, z, self.knowledge.excursion_prob)
 
         trajectory = []
         for i in range(len(self.knowledge.trajectory)):
-            trajectory.append([self.knowledge.trajectory[i].lat,
-                               self.knowledge.trajectory[i].lon,
-                               self.knowledge.trajectory[i].depth])
+            trajectory.append([self.knowledge.trajectory[i].x,
+                               self.knowledge.trajectory[i].y,
+                               self.knowledge.trajectory[i].z])
 
-        fig = make_subplots(rows = 1, cols = 2, specs = [[{'type': 'scene'}, {'type': 'scene'}]],
-                            subplot_titles=("Updated field", "Updated excursion probability", ))
+        fig = make_subplots(rows=1, cols=2, specs=[[{'type': 'scene'}, {'type': 'scene'}]],
+                            subplot_titles=("Updated field", "Updated excursion probability",))
         # fig = make_subplots(rows = 1, cols = 3, specs = [[{'type': 'scene'}, {'type': 'scene'}, {'type': 'scene'}]],
         #                     subplot_titles=("Conditional Mean", "Std", "EP"))
         fig.add_trace(go.Volume(
-            x = points_mean[:, 0],
-            y = points_mean[:, 1],
-            z = -points_mean[:, 2],
+            x=points_mean[:, 0],
+            y=points_mean[:, 1],
+            z=-points_mean[:, 2],
             value=values_mean.flatten(),
             isomin=self.vmin,
             isomax=self.vmax,
-            opacity = .1,
-            surface_count = 30,
-            colorscale = "BrBG",
+            opacity=.1,
+            surface_count=30,
+            colorscale="BrBG",
             # coloraxis="coloraxis1",
-            colorbar=dict(x=0.5,y=0.5, len=.5),
+            colorbar=dict(x=0.5, y=0.5, len=.5),
             reversescale=True,
-            caps=dict(x_show=False, y_show=False, z_show = False),
-            ),
+            caps=dict(x_show=False, y_show=False, z_show=False),
+        ),
             row=1, col=1
         )
         # print(values_std)
@@ -96,7 +96,7 @@ class KnowledgePlot:
             isomax=1,
             opacity=.1,
             surface_count=30,
-            colorscale = "gnbu",
+            colorscale="gnbu",
             colorbar=dict(x=1, y=0.5, len=.5),
             reversescale=True,
             caps=dict(x_show=False, y_show=False, z_show=False),
@@ -105,11 +105,11 @@ class KnowledgePlot:
             # row = 1, col = 3,
         )
 
-        if len(self.knowledge.ind_neighbour_filtered):
+        if len(self.knowledge.ind_neighbour_filtered_waypoint):
             fig.add_trace(go.Scatter3d(
-                x=self.knowledge.coordinates_wgs[self.knowledge.ind_neighbour_filtered, 1],
-                y=self.knowledge.coordinates_wgs[self.knowledge.ind_neighbour_filtered, 0],
-                z=-self.knowledge.coordinates_wgs[self.knowledge.ind_neighbour_filtered, 2],
+                x=self.knowledge.coordinates_waypoint[self.knowledge.ind_neighbour_filtered_waypoint, 0],
+                y=self.knowledge.coordinates_waypoint[self.knowledge.ind_neighbour_filtered_waypoint, 1],
+                z=-self.knowledge.coordinates_waypoint[self.knowledge.ind_neighbour_filtered_waypoint, 2],
                 mode='markers',
                 marker=dict(
                     size=15,
@@ -138,15 +138,16 @@ class KnowledgePlot:
         #     )
 
         if trajectory:
+            trajectory = np.array(trajectory)
             fig.add_trace(go.Scatter3d(
                 # print(trajectory),
-                x=trajectory[:, 1],
-                y=trajectory[:, 0],
+                x=trajectory[:, 0],
+                y=trajectory[:, 1],
                 z=-trajectory[:, 2],
                 mode='markers+lines',
                 marker=dict(
                     size=5,
-                    color = "black",
+                    color="black",
                     showscale=False,
                 ),
                 line=dict(
@@ -156,20 +157,20 @@ class KnowledgePlot:
                 ),
                 showlegend=False,
             ),
-            row='all', col='all'
+                row='all', col='all'
             )
 
         fig.add_trace(go.Scatter3d(
-            x=[self.knowledge.current_location.lon],
-            y=[self.knowledge.current_location.lat],
-            z=[-self.knowledge.current_location.depth],
+            x=[self.knowledge.current_location.x],
+            y=[self.knowledge.current_location.y],
+            z=[-self.knowledge.current_location.z],
             mode='markers',
             marker=dict(
                 size=20,
                 color="red",
                 showscale=False,
             ),
-            showlegend=False, # remove all unnecessary trace names
+            showlegend=False,  # remove all unnecessary trace names
         ),
             row='all', col='all'
         )
@@ -187,14 +188,14 @@ class KnowledgePlot:
                 'x': 0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            scene = dict(
-                zaxis = dict(nticks=4, range=[-3,0],),
+            scene=dict(
+                zaxis=dict(nticks=4, range=[-3, 0], ),
                 xaxis_tickfont=dict(size=14, family="Times New Roman"),
                 yaxis_tickfont=dict(size=14, family="Times New Roman"),
                 zaxis_tickfont=dict(size=14, family="Times New Roman"),
-                xaxis_title=dict(text="Longitude", font=dict(size=18, family="Times New Roman")),
-                yaxis_title=dict(text="Latitude", font=dict(size=18, family="Times New Roman")),
-                zaxis_title=dict(text="Depth", font=dict(size=18, family="Times New Roman")),
+                xaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+                yaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+                zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
             ),
             scene_aspectmode='manual',
             scene_aspectratio=dict(x=1, y=1, z=.5),
@@ -203,9 +204,9 @@ class KnowledgePlot:
                 xaxis_tickfont=dict(size=14, family="Times New Roman"),
                 yaxis_tickfont=dict(size=14, family="Times New Roman"),
                 zaxis_tickfont=dict(size=14, family="Times New Roman"),
-                xaxis_title=dict(text="Longitude", font=dict(size=18, family="Times New Roman")),
-                yaxis_title=dict(text="Latitude", font=dict(size=18, family="Times New Roman")),
-                zaxis_title=dict(text="Depth", font=dict(size=18, family="Times New Roman")),
+                xaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+                yaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+                zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
             ),
             scene2_aspectmode='manual',
             scene2_aspectratio=dict(x=1, y=1, z=.5),
@@ -214,9 +215,9 @@ class KnowledgePlot:
                 xaxis_tickfont=dict(size=14, family="Times New Roman"),
                 yaxis_tickfont=dict(size=14, family="Times New Roman"),
                 zaxis_tickfont=dict(size=14, family="Times New Roman"),
-                xaxis_title=dict(text="Longitude", font=dict(size=18, family="Times New Roman")),
-                yaxis_title=dict(text="Latitude", font=dict(size=18, family="Times New Roman")),
-                zaxis_title=dict(text="Depth", font=dict(size=18, family="Times New Roman")),
+                xaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+                yaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+                zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
             ),
             scene3_aspectmode='manual',
             scene3_aspectratio=dict(x=1, y=1, z=.5),
@@ -228,10 +229,9 @@ class KnowledgePlot:
         # fig.update_scenes(xaxis_visible=False, yaxis_visible=False,zaxis_visible=False)
         # if self.html:
         # print("Save html")
-        plotly.offline.plot(fig, filename = self.filename+".html", auto_open = False)
-            # os.system("open -a \"Google Chrome\" /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Publication/Nidelva/fig/Simulation/"+self.filename+".html")
+        plotly.offline.plot(fig, filename=self.filename + ".html", auto_open=False)
+        # os.system("open -a \"Google Chrome\" /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Publication/Nidelva/fig/Simulation/"+self.filename+".html")
         # fig.write_image(self.filename+".png", width=1980, height=1080, engine = "orca")
-
 
 
 
