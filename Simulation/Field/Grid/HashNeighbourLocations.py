@@ -97,7 +97,7 @@ class HashNeighbourLocations:
 
 if __name__ == "__main__":
     n = HashNeighbourLocations()
-    n.plot_neighbours(5000)
+    n.plot_neighbours(np.random.randint(n.coordinates.shape[0]))
 
 
 

@@ -31,6 +31,7 @@ class Knowledge:
 
         # learned
         self.ind_neighbour_filtered_waypoint = []
+        self.ind_visited_waypoint = []
         self.next_location = None
         self.trajectory = []
         self.step_no = 0

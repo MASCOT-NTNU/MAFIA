@@ -43,14 +43,14 @@ class PathPlanner:
 
     def load_waypoint(self):
         self.coordinates_waypoint = pd.read_csv(FILEPATH + "Simulation/Field/Grid/Grid.csv").to_numpy()
-        self.waypoint_xyz = self.coordinates_waypoint[:, -3:]
+        self.coordinates_waypoint_xyz = self.coordinates_waypoint[:, -3:]
         neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/Field/Grid/Neighbours.p", 'rb')
         self.neighbour_hash_table_waypoint = pickle.load(neighbour_hash_table_filehandler)
         neighbour_hash_table_filehandler.close()
         print("Waypoint is loaded successfully!")
 
     def initialise_function_calls(self):
-        get_ind_at_location3d_xyz(self.waypoint_xyz, 1, 2, 3)  # used to initialise the function call
+        get_ind_at_location3d_xyz(self.coordinates_waypoint_xyz, 1, 2, 3)  # used to initialise the function call
         print("Function calls are initialised successfully! Enjoy fast and furious!")
 
     def load_ground_truth(self):
@@ -58,7 +58,8 @@ class PathPlanner:
         self.ground_truth = pd.read_csv(path_mu_truth).to_numpy()[:, -1].reshape(-1, 1)
 
     def setup_knowledge(self):
-        self.knowledge = Knowledge(coordinates_grid=self.coordinates_spde_xyz, coordinates_waypoint=self.waypoint_xyz,
+        self.knowledge = Knowledge(coordinates_grid=self.coordinates_spde_xyz,
+                                   coordinates_waypoint=self.coordinates_waypoint_xyz,
                                    neighbour_hash_table_waypoint=self.neighbour_hash_table_waypoint,
                                    threshold=THRESHOLD, spde_model=self.spde_model,
                                    previous_location=self.starting_location, current_location=self.starting_location)
@@ -66,8 +67,7 @@ class PathPlanner:
                                                          self.knowledge.current_location.x,
                                                          self.knowledge.current_location.y,
                                                          self.knowledge.current_location.z)
-        print("ind_sample_grid: ", self.ind_sample_grid)
-        self.knowledge.ind_current_location_waypoint = get_ind_at_location3d_xyz(self.waypoint_xyz,
+        self.knowledge.ind_current_location_waypoint = get_ind_at_location3d_xyz(self.coordinates_waypoint_xyz,
                                                                                  self.knowledge.current_location.x,
                                                                                  self.knowledge.current_location.y,
                                                                                  self.knowledge.current_location.z)
@@ -90,28 +90,177 @@ class PathPlanner:
             print("ind_sample_grid: ", self.ind_sample_grid)
 
             self.knowledge.step_no = i
-            break
+            KnowledgePlot(knowledge=self.knowledge, vmin=16, vmax=28,
+                          filename=FILEPATH + "fig/myopic3d/P_{:03d}".format(i), html=False)
             # KnowledgePlot(knowledge=self.knowledge, vmin=0, vmax=32,
             #               filename=FILEPATH + "fig/myopic3d/P_{:03d}".format(i), html=False)
-
-            # print("test of plotting")
-
-
+            if i == 20:
+                break
         # KnowledgePlot(knowledge=self.knowledge, vmin=VMIN, vmax=VMAX, filename=foldername + "Field_{:03d}".format(i), html=False)
+
+    def run_debug(self):
+        self.ind_sample_waypoint = np.random.randint(self.knowledge.coordinates_waypoint.shape[0])
+        # self.ind_sample_spde = np.random.randint(self.knowledge.coordinates_grid.shape[0])
+        for i in range(self.num_steps):
+            print("STEP: ", i)
+            self.knowledge.step_no = i
+            # KnowledgePlot(knowledge=self.knowledge, vmin=0, vmax=28,
+            #               filename=FILEPATH + "fig/myopic3d/P_{:03d}".format(i), html=False)
+
+            self.location_sample = Location(self.knowledge.coordinates_waypoint[self.ind_sample_waypoint, 0],
+                                       self.knowledge.coordinates_waypoint[self.ind_sample_waypoint, 1],
+                                       self.knowledge.coordinates_waypoint[self.ind_sample_waypoint, 2])
+            self.ind_sample_spde = get_ind_at_location3d_xyz(self.knowledge.coordinates_grid,
+                                                             self.location_sample.x,
+                                                             self.location_sample.y,
+                                                             self.location_sample.z)
+
+            Sampler(self.knowledge, self.ground_truth, self.ind_sample_spde)
+
+            # == convert to waypoint graph
+            self.knowledge.current_location = self.location_sample
+
+            self.ind_neighbour = self.knowledge.neighbour_hash_table_waypoint[self.ind_sample_waypoint]
+            print("ind_neighbour: ", self.ind_neighbour)
+
+            self.ind_sample_waypoint = self.ind_neighbour[np.random.randint(len(self.ind_neighbour))]
+            print("ind_next: ", self.ind_sample_waypoint)
+            self.knowledge.next_location = self.location_sample
+
+            if i == 20:
+                break
+        pass
+
+    def neighbour_plot(self):
+        ind_sample = np.random.randint(self.coordinates_waypoint.shape[0])
+        self.traj = []
+        self.traj.append([self.coordinates_waypoint[ind_sample, 0],
+                           self.coordinates_waypoint[ind_sample, 1],
+                           -self.coordinates_waypoint[ind_sample, 2]])
+
+        for i in range(self.num_steps):
+            print("Step: ", i)
+            self.traj.append([self.coordinates_waypoint[ind_sample, 0],
+                              self.coordinates_waypoint[ind_sample, 1],
+                              -self.coordinates_waypoint[ind_sample, 2]])
+
+            self.ind_neighbour = self.knowledge.neighbour_hash_table_waypoint[ind_sample]
+            ind_next = self.ind_neighbour[np.random.randint(len(self.ind_neighbour))]
+
+            print("ind_neighbour: ", self.ind_neighbour)
+            print("ind sample: ", ind_sample)
+            print("ind next: ", ind_next)
+
+            fig = go.Figure(data=[go.Scatter3d(
+                x=self.coordinates_waypoint[:, 1],
+                y=self.coordinates_waypoint[:, 0],
+                z=-self.coordinates_waypoint[:, 2],
+                mode='markers',
+                marker=dict(
+                    size=2,
+                    color='black',
+                    # opacity=0.2
+                )
+            )])
+
+            ptrajctory = np.array(self.traj)
+            fig.add_trace(go.Scatter3d(
+                x=ptrajctory[:, 1],
+                y=ptrajctory[:, 0],
+                z=ptrajctory[:, 2],
+                mode='markers+lines',
+                marker=dict(
+                    size=5,
+                    color="black",
+                    showscale=False,
+                ),
+                line=dict(
+                    color="yellow",
+                    width=3,
+                    showscale=False,
+                ),
+            ))
+
+            fig.add_trace(go.Scatter3d(
+                x=self.coordinates_waypoint[self.ind_neighbour, 1],
+                y=self.coordinates_waypoint[self.ind_neighbour, 0],
+                z=-self.coordinates_waypoint[self.ind_neighbour, 2],
+                mode='markers',
+                marker=dict(
+                    size=10,
+                    color='green',
+                    opacity=0.4
+                )
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[self.coordinates_waypoint[ind_sample, 1]],
+                y=[self.coordinates_waypoint[ind_sample, 0]],
+                z=[-self.coordinates_waypoint[ind_sample, 2]],
+                mode='markers',
+                marker=dict(
+                    size=15,
+                    color='red',
+                    # opacity=0.8
+                )
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[self.coordinates_waypoint[ind_next, 1]],
+                y=[self.coordinates_waypoint[ind_next, 0]],
+                z=[-self.coordinates_waypoint[ind_next, 2]],
+                mode='markers',
+                marker=dict(
+                    size=15,
+                    color='blue',
+                    # opacity=0.8
+                )
+            ))
+            camera = dict(
+                up=dict(x=0, y=0, z=1),
+                center=dict(x=0, y=0, z=0),
+                eye=dict(x=-1.25, y=-1.25, z=1.25)
+            )
+            fig.update_layout(
+                title={
+                    'text': "Simulation",
+                    'y': 0.9,
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'yanchor': 'top'},
+                scene=dict(
+                    zaxis=dict(nticks=4, range=[-10, 0], ),
+                    xaxis_tickfont=dict(size=14, family="Times New Roman"),
+                    yaxis_tickfont=dict(size=14, family="Times New Roman"),
+                    zaxis_tickfont=dict(size=14, family="Times New Roman"),
+                    xaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+                    yaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+                    zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
+                ),
+                scene_aspectmode='manual',
+                scene_aspectratio=dict(x=1, y=1, z=.5),
+                scene_camera=camera,
+            )
+            filename = FIGPATH+"myopic3d/Neighbour/P_{:03d}.html".format(i)
+            plotly.offline.plot(fig, filename=filename, auto_open=False)
+            if i == 30:
+                break
+
+            ind_sample = ind_next
+
 
 
 if __name__ == "__main__":
-    lat_start = 63.451197
-    lon_start = 10.411521
-    depth_start = .5
+    lat_start = 63.453222
+    lon_start = 10.414687
+    depth_start = 1.5
     x, y = latlon2xy(lat_start, lon_start, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
     z = depth_start
     starting_location = Location(x, y, z)
 
     p = PathPlanner(starting_location=starting_location)
-    p.run()
+    # p.run()
+    # p.run_debug()
 
-
+    p.neighbour_plot()
 
 
 
@@ -119,7 +268,7 @@ if __name__ == "__main__":
 
 class KnowledgePlot:
 
-    def __init__(self, knowledge=None, vmin=28, vmax=30, filename="mean", html=False):
+    def __init__(self, knowledge=None, vmin=None, vmax=None, filename="mean", html=False):
         if knowledge is None:
             raise ValueError("")
         self.knowledge = knowledge
@@ -142,30 +291,134 @@ class KnowledgePlot:
 
         self.xplot = yrotated
         self.yplot = xrotated
-        self.zplot = self.coordinates[self.ind_remove_top_layer, 2]
 
         pass
 
     def simple_plot(self):
 
+        self.ind_selected_to_plot = np.where(self.knowledge.mu_cond[self.ind_remove_top_layer]>1)[0]
+        self.xplot = self.xplot[self.ind_selected_to_plot]
+        self.yplot = self.yplot[self.ind_selected_to_plot]
+        self.zplot = -self.coordinates[self.ind_remove_top_layer, 2][self.ind_selected_to_plot]
 
-        fig = go.Figure(data=[go.Scatter3d(
+        points_mean, values_mean = interpolate_3d(self.xplot, self.yplot, self.zplot,
+                                                  self.knowledge.mu_cond[self.ind_remove_top_layer][self.ind_selected_to_plot])
+
+        fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]],
+                            subplot_titles=("Salinity field"))
+
+        # fig.add_trace(go.Volume(
+        #     x=points_mean[:, 0],
+        #     y=points_mean[:, 1],
+        #     z=points_mean[:, 2],
+        #     value=values_mean,
+        #     isomin=self.vmin,
+        #     isomax=self.vmax,
+        #     opacity=.3,
+        #     surface_count=10,
+        #     colorscale="BrBG",
+        #     # coloraxis="coloraxis1",
+        #     # colorbar=dict(x=0.5, y=0.5, len=.5),
+        #     # reversescale=True,
+        #     caps=dict(x_show=False, y_show=False, z_show=False),
+        # ))
+        fig.add_trace(go.Scatter3d(
             x=self.xplot,
             y=self.yplot,
-            z=-self.zplot,
+            z=self.zplot,
             mode='markers',
             marker=dict(
                 size=12,
-                color=self.knowledge.mu_cond[self.ind_remove_top_layer],  # set color to an array/list of desired values
+                color=self.knowledge.mu_cond[self.ind_remove_top_layer][self.ind_selected_to_plot],  # set color to an array/list of desired values
                 colorscale='Viridis',  # choose a colorscale
                 opacity=0.8
             )
-        )])
+        ))
+
+        # fig = go.Figure(data=[(
+
+        # )])
+
+        # if len(self.knowledge.ind_neighbour_filtered_waypoint):
+        #     fig.add_trace(go.Scatter3d(
+        #         x=self.knowledge.coordinates_waypoint[self.knowledge.ind_neighbour_filtered_waypoint, 1],
+        #         y=self.knowledge.coordinates_waypoint[self.knowledge.ind_neighbour_filtered_waypoint, 0],
+        #         z=-self.knowledge.coordinates_waypoint[self.knowledge.ind_neighbour_filtered_waypoint, 2],
+        #         mode='markers',
+        #         marker=dict(
+        #             size=15,
+        #             color="white",
+        #             showscale=False,
+        #         ),
+        #         showlegend=False,
+        #     ),
+        #         row='all', col='all'
+        #     )
+
+        # fig.add_trace(go.Scatter3d(
+        #     x=[self.knowledge.current_location.y],
+        #     y=[self.knowledge.current_location.x],
+        #     z=[-self.knowledge.current_location.z],
+        #     mode='markers',
+        #     marker=dict(
+        #         size=20,
+        #         color="red",
+        #         showscale=False,
+        #     ),
+        #     showlegend=False,  # remove all unnecessary trace names
+        # ),
+        #     row='all', col='all'
+        # )
+        #
+        # fig.add_trace(go.Scatter3d(
+        #     x=[self.knowledge.next_location.y],
+        #     y=[self.knowledge.next_location.x],
+        #     z=[-self.knowledge.next_location.z],
+        #     mode='markers',
+        #     marker=dict(
+        #         size=20,
+        #         color="blue",
+        #         showscale=False,
+        #     ),
+        #     showlegend=False,  # remove all unnecessary trace names
+        # ),
+        #     row='all', col='all'
+        # )
+
+        # trajectory = []
+        # for i in range(len(self.knowledge.trajectory)):
+        #     trajectory.append([self.knowledge.trajectory[i].y,
+        #                        self.knowledge.trajectory[i].x,
+        #                        self.knowledge.trajectory[i].z])
+        #
+        # if trajectory:
+        #     trajectory = np.array(trajectory)
+        #     fig.add_trace(go.Scatter3d(
+        #         # print(trajectory),
+        #         x=trajectory[:, 0],
+        #         y=trajectory[:, 1],
+        #         z=-trajectory[:, 2],
+        #         mode='markers+lines',
+        #         marker=dict(
+        #             size=5,
+        #             color="black",
+        #             showscale=False,
+        #         ),
+        #         line=dict(
+        #             color="yellow",
+        #             width=3,
+        #             showscale=False,
+        #         ),
+        #         showlegend=False,
+        #     ),
+        #         row='all', col='all'
+        #     )
+
 
         camera = dict(
             up=dict(x=0, y=0, z=1),
             center=dict(x=0, y=0, z=0),
-            eye=dict(x=2.25, y=2.25, z=2.25)
+            eye=dict(x=1.25, y=1.25, z=1.25)
         )
         fig.update_layout(
             title={
@@ -184,7 +437,7 @@ class KnowledgePlot:
                 zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
             ),
             scene_aspectmode='manual',
-            scene_aspectratio=dict(x=1, y=1, z=1),
+            scene_aspectratio=dict(x=1, y=1, z=.5),
             scene_camera=camera,
         )
 
@@ -370,14 +623,45 @@ class KnowledgePlot:
 
 
 self = p
-kp = KnowledgePlot(knowledge=self.knowledge, vmin=0, vmax=32,
+kp = KnowledgePlot(knowledge=self.knowledge, vmin=16, vmax=28,
               filename=FILEPATH + "fig/myopic3d/P_{:03d}".format(0), html=False)
 
 
 
+#%%
+@jit(nopython=True)
+def get_ind_at_location3d_xyz(coordinates, x, y, z):
+    dist_x = coordinates[:, 0] - x
+    dist_y = coordinates[:, 1] - y
+    dist_z = coordinates[:, 2] - z
+    dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
+    ind = np.argmin(dist)
+    return ind
+
+def cpu_get_ind_at_location3d_xyz(coordinates, x, y, z):
+    dist_x = coordinates[:, 0] - x
+    dist_y = coordinates[:, 1] - y
+    dist_z = coordinates[:, 2] - z
+    dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
+    ind = np.argmin(dist)
+    return ind
+
+get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
+
+t1 = time.time()
+get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
+t2 = time.time()
+dt_gpu = t2 - t1
+print("GPU time: ", t2 - t1)
 
 
+t1 = time.time()
+cpu_get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
+t2 = time.time()
+dt_cpu = t2 - t1
+print("CPU time: ", t2 - t1)
 
+print("Speed up: ", dt_cpu / dt_gpu)
 
 #%%
 

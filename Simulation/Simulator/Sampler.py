@@ -23,19 +23,20 @@ class Sampler:
         # eibv = self.kernel.get_eibv_1d(self.ind_sample)
         # dist = self.getDistanceTravelled()
         # print(self.ground_truth.)
-        print("measurement: ", self.ground_truth[self.ind_sample].shape)
-        print("indsample: ", self.ind_sample)
+        # print("measurement: ", self.ground_truth[self.ind_sample].shape)
+        # print("indsample: ", self.ind_sample)
 
-        self.knowledge.spde_model.update(rel = self.ground_truth[self.ind_sample].squeeze(), ks = self.ind_sample)
+        self.knowledge.spde_model.update(rel=self.ground_truth[self.ind_sample].squeeze(), ks=self.ind_sample)
         self.knowledge.mu_cond = self.knowledge.spde_model.mu
         self.knowledge.Sigma_cond_diag = self.knowledge.spde_model.mvar()
-        print("mu_cond: ", self.knowledge.mu_cond.shape)
+        # print("mu_cond: ", self.knowledge.mu_cond.shape)
         self.knowledge.excursion_prob = get_excursion_prob_1d(self.knowledge.mu_cond,
                                                               np.diagflat(self.knowledge.Sigma_cond_diag),
                                                               self.knowledge.threshold)
 
         self.knowledge.previous_location = self.knowledge.current_location
         self.knowledge.current_location = self.knowledge.next_location
+        self.knowledge.ind_visited_waypoint.append(self.knowledge.ind_current_location_waypoint)
         # self.knowledge.rootMeanSquaredError.append(mean_squared_error(self.ground_truth, self.knowledge.mu_cond,
         #                                                               squared=False))
         # self.knowledge.expectedVariance.append(np.sum(np.diag(self.knowledge.kernel.Sigma_cond)))

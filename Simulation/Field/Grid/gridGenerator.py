@@ -14,7 +14,7 @@ polygon_border = FILEPATH + "Simulation/Config/polygon_border.csv"
 polygon_border = pd.read_csv(polygon_border).to_numpy()
 polygon_obstacle = np.empty([10, 2])
 
-depth = [0.5, 1., 1.5, 2., 2.5]
+depth = [0.5, 1., 1.5, 2., 2.5, 3.0, 3.5, 4.0, 4.5, 5]
 gridGenerator = HexgonalGrid3DGenerator(polygon_border=polygon_border, polygon_obstacle=polygon_obstacle,
                                         depth=depth, neighbour_distance=DISTANCE_NEIGHBOUR)
 coordinates = gridGenerator.coordinates

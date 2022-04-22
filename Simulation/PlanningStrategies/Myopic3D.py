@@ -27,7 +27,7 @@ class MyopicPlanning3D:
         eibv = []
         for k in range(len(self.knowledge.ind_neighbour_filtered_waypoint)):
             ind_candidate_waypoint = self.knowledge.ind_neighbour_filtered_waypoint[k]
-            ind_candidate_grid = self.get_ind_candidate_from_waypoint_ind(ind_candidate_waypoint)
+            ind_candidate_grid = self.get_spde_ind_from_waypoint_ind(ind_candidate_waypoint)
             eibv.append(self.get_eibv_1d(ind_candidate_grid))
         t2 = time.time()
         if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
@@ -37,7 +37,9 @@ class MyopicPlanning3D:
                 # self.knowledge.next_location = self.search_for_new_location()
                 # TODO: add go home function
         else:
-            ind_minimum_eibv = np.argmin(np.array(eibv))
+            ind_minimum_eibv = np.argmin(eibv)
+            print("EIBV:", eibv)
+            print("ID candidate: ", ind_minimum_eibv)
             ind_next = self.knowledge.ind_neighbour_filtered_waypoint[ind_minimum_eibv]
             self.knowledge.next_location = self.get_location_from_ind_waypoint(ind_next)
         print("Time consumed: ", t2 - t1)
@@ -51,16 +53,17 @@ class MyopicPlanning3D:
         for i in range(len(self.ind_neighbour_locations)):
             ind_candidate_location = self.ind_neighbour_locations[i]
             if ind_candidate_location != self.knowledge.ind_current_location_waypoint:
-                vec2 = self.get_vector_between_locations(self.knowledge.current_location,
-                                                         self.get_location_from_ind_waypoint(ind_candidate_location))
-                if np.dot(vec1.T, vec2) >= 0:
-                    id.append(self.ind_neighbour_locations[i])
+                if not ind_candidate_location in self.knowledge.ind_visited_waypoint:
+                    vec2 = self.get_vector_between_locations(self.knowledge.current_location,
+                                                             self.get_location_from_ind_waypoint(ind_candidate_location))
+                    if np.dot(vec1.T, vec2) >= 0:
+                        id.append(self.ind_neighbour_locations[i])
         t2 = time.time()
         self.knowledge.ind_neighbour_filtered_waypoint = np.unique(np.array(id))
         # print("Filtering takes: ", t2 - t1)
-        # print("after filtering: ", self.knowledge.ind_neighbour_filtered)
+        print("after filtering: ", self.knowledge.ind_neighbour_filtered_waypoint)
 
-    def get_ind_candidate_from_waypoint_ind(self, ind_waypoint):
+    def get_spde_ind_from_waypoint_ind(self, ind_waypoint):
         location_candidate = self.get_location_from_ind_waypoint(ind_waypoint)
         ind_candidate_grid = get_ind_at_location3d_xyz(self.knowledge.coordinates_grid,
                                                        location_candidate.x,
