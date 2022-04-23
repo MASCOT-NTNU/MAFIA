@@ -58,8 +58,7 @@ class Simulator:
         print("S5: Simulated truth is loaded successfully!")
 
     def update_knowledge(self):
-        self.knowledge = Knowledge(gmrf_grid=self.gmrf_grid, waypoints=self.waypoints, mu=self.gmrf_model.mu,
-                                   SigmaDiag=self.gmrf_model.mvar(), ind_sample=None)
+        self.knowledge = Knowledge(gmrf_grid=self.gmrf_grid, mu=self.gmrf_model.mu, SigmaDiag=self.gmrf_model.mvar())
         print("S6: Knowledge of the field is set up successfully!")
 
     def load_hash_neighbours(self):
@@ -70,7 +69,7 @@ class Simulator:
 
     def load_hash_waypoint2gmrf(self):
         waypoint2gmrf_file = open(FILEPATH + "Simulation/Config/HashWaypoint2GMRF.p", 'rb')
-        self.hash_neighbours = pickle.load(waypoint2gmrf_file)
+        self.hash_waypoint2gmrf = pickle.load(waypoint2gmrf_file)
         waypoint2gmrf_file.close()
         print("S8: Waypoint2GMRF hash table is loaded successfully!")
 
@@ -79,17 +78,72 @@ class Simulator:
         print("S9: Function calls are initialised successfully!")
 
     def run(self):
-        self.ind_start = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
+        ind_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         for i in range(NUM_STEPS):
             print("Step: ", i)
-            # self.salinity_measured = self.simulated_truth[self.]
+            ind_sample = self.hash_waypoint2gmrf[ind_waypoint]
+            self.salinity_measured = self.simulated_truth[ind_sample][0]
+
+            t1 = time.time()
+            self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample)
+            t2 = time.time()
+            print("Update consumed: ", t2 - t1)
+
+            self.knowledge.mu = self.gmrf_model.mu
+            self.knowledge.SigmaDiag = self.gmrf_model.mvar()
+
+            ind_previous = 3791
+            planner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints, gmrf_model=self.gmrf_model,
+                                       ind_current=ind_waypoint, ind_previous=ind_previous,
+                                       hash_neighbours=self.hash_neighbours, hash_waypoint2gmrf=self.hash_waypoint2gmrf)
+
+
+            fig = go.Figure(data=go.Scatter3d(
+                x=self.waypoints[planner.ind_candidates, 1],
+                y=self.waypoints[planner.ind_candidates, 0],
+                z=-self.waypoints[planner.ind_candidates, 2],
+                mode='markers',
+                marker=dict(color='red', size=10 - normalise(planner.EIBV, 0, 10))
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=self.waypoints[:, 1],
+                y=self.waypoints[:, 0],
+                z=-self.waypoints[:, 2],
+                mode='markers',
+                marker=dict(color='black', size=1, opacity=.1)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[self.waypoints[ind_previous, 1]],
+                y=[self.waypoints[ind_previous, 0]],
+                z=[-self.waypoints[ind_previous, 2]],
+                mode='markers',
+                marker=dict(color='blue', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[self.waypoints[ind_waypoint, 1]],
+                y=[self.waypoints[ind_waypoint, 0]],
+                z=[-self.waypoints[ind_waypoint, 2]],
+                mode='markers',
+                marker=dict(color='green', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[self.waypoints[planner.ind_next, 1]],
+                y=[self.waypoints[planner.ind_next, 0]],
+                z=[-self.waypoints[planner.ind_next, 2]],
+                mode='markers',
+                marker=dict(color='yellow', size=10, opacity=.4)
+            ))
+            plotly.offline.plot(fig, filename=FIGPATH + "neighbour.html", auto_open=True)
+
             # self.knowledge.spde_model.update(rel=self.ground_truth[self.ind_sample].squeeze(), ks=self.ind_sample)
             # self.knowledge.mu_cond = self.knowledge.spde_model.mu
             # self.knowledge.Sigma_cond_diag = self.knowledge.spde_model.mvar()
-            if i == 5:
-                break
+            # if i == 0:
+            #     break
+            break
         pass
 
 if __name__ == "__main__":
     s = Simulator()
     s.run()
+

@@ -11,107 +11,75 @@ next_location = MyopicPlanning3D(Knowledge, Experience).next_waypoint
 """
 
 from usr_func import *
-from MAFIA.Simulation.PreConfig.WaypointGraph.Location import Location
+from MAFIA.Simulation.Config.Config import *
 import time
 
 
 class MyopicPlanning3D:
 
-    def __init__(self, knowledge):
+    def __init__(self, knowledge=None, waypoints=None, gmrf_model=None, ind_current=None, ind_previous=None,
+                 hash_neighbours=None, hash_waypoint2gmrf=None):
+
         self.knowledge = knowledge
-        self.find_next_waypoint()
+        self.waypoints = waypoints
+        self.gmrf_model = gmrf_model
+        self.ind_current = ind_current
+        self.ind_previous = ind_previous
+        self.hash_neighbours = hash_neighbours
+        self.hash_waypoint2gmrf = hash_waypoint2gmrf
+        self.trajectory = []
+        self.ind_visited = []
 
-    def find_next_waypoint(self):
-        self.filter_neighbouring_loc()
-        t1 = time.time()
-        eibv = []
-        for k in range(len(self.knowledge.ind_neighbour_filtered_waypoint)):
-            ind_candidate_waypoint = self.knowledge.ind_neighbour_filtered_waypoint[k]
-            ind_candidate_grid = self.get_spde_ind_from_waypoint_ind(ind_candidate_waypoint)
-            eibv.append(self.get_eibv_1d(ind_candidate_grid))
-        t2 = time.time()
-        if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
-            while True:
-                pass
-                break
-                # self.knowledge.next_location = self.search_for_new_location()
-                # TODO: add go home function
-        else:
-            ind_minimum_eibv = np.argmin(eibv)
-            print("EIBV:", eibv)
-            print("ID candidate: ", ind_minimum_eibv)
-            ind_next = self.knowledge.ind_neighbour_filtered_waypoint[ind_minimum_eibv]
-            self.knowledge.next_location = self.get_location_from_ind_waypoint(ind_next)
-        print("Time consumed: ", t2 - t1)
+        self.find_all_neighbours()
+        self.smooth_filter_neighbours()
+        self.find_next_waypoint_using_min_eibv()
 
-    def filter_neighbouring_loc(self):
-        t1 = time.time()
-        id = []
-        self.ind_neighbour_locations = self.knowledge.hash_neighbours[
-            self.knowledge.ind_current_location_waypoint]
-        vec1 = self.get_vector_between_locations(self.knowledge.previous_location, self.knowledge.current_location)
-        for i in range(len(self.ind_neighbour_locations)):
-            ind_candidate_location = self.ind_neighbour_locations[i]
-            if ind_candidate_location != self.knowledge.ind_current_location_waypoint:
-                if not ind_candidate_location in self.knowledge.ind_visited_waypoint:
-                    vec2 = self.get_vector_between_locations(self.knowledge.current_location,
-                                                             self.get_location_from_ind_waypoint(ind_candidate_location))
-                    if np.dot(vec1.T, vec2) >= 0:
-                        id.append(self.ind_neighbour_locations[i])
-        t2 = time.time()
-        self.knowledge.ind_neighbour_filtered_waypoint = np.unique(np.array(id))
-        # print("Filtering takes: ", t2 - t1)
-        print("after filtering: ", self.knowledge.ind_neighbour_filtered_waypoint)
+    def find_all_neighbours(self):
+        self.ind_neighbours = self.hash_neighbours[self.ind_current]
 
-    def get_spde_ind_from_waypoint_ind(self, ind_waypoint):
-        location_candidate = self.get_location_from_ind_waypoint(ind_waypoint)
-        ind_candidate_grid = get_ind_at_location3d_xyz(self.knowledge.coordinates_grid,
-                                                       location_candidate.x,
-                                                       location_candidate.y,
-                                                       location_candidate.z)
-        return ind_candidate_grid
+    def smooth_filter_neighbours(self):
+        vec1 = self.get_vec_from_indices(self.ind_previous, self.ind_current)
+        self.ind_candidates = []
+        for i in range(len(self.ind_neighbours)):
+            ind_candidate = self.ind_neighbours[i]
+            if not ind_candidate in self.ind_visited:
+                vec2 = self.get_vec_from_indices(self.ind_current, ind_candidate)
+                if np.dot(vec1.T, vec2) >= 0:
+                    self.ind_candidates.append(ind_candidate)
 
-    def get_vector_between_locations(self, loc_start, loc_end):
-        dx = loc_end.X_START - loc_start.X_START
-        dy = loc_end.Y_START - loc_start.Y_START
-        dz = loc_end.Z_START - loc_start.Z_START
+    def get_vec_from_indices(self, ind_start, ind_end):
+        x_start = self.waypoints[ind_start, 0]
+        y_start = self.waypoints[ind_start, 1]
+        z_start = self.waypoints[ind_start, 2]
+
+        x_end = self.waypoints[ind_end, 0]
+        y_end = self.waypoints[ind_end, 1]
+        z_end = self.waypoints[ind_end, 2]
+
+        dx = x_end - x_start
+        dy = y_end - y_start
+        dz = z_end - z_start
+
         return vectorise([dx, dy, dz])
 
-    def get_location_from_ind_waypoint(self, ind):
-        return Location(self.knowledge.waypoints[ind, 0],
-                        self.knowledge.waypoints[ind, 1],
-                        self.knowledge.waypoints[ind, 2])
+    def find_next_waypoint_using_min_eibv(self):
+        self.EIBV = []
+        t1 = time.time()
+        for ind_candidate in self.ind_candidates:
+            self.EIBV.append(self.get_eibv_from_gmrf_model(self.hash_waypoint2gmrf[ind_candidate]))
+        if self.EIBV:
+            self.ind_next = self.ind_candidates[np.argmin(self.EIBV)]
+        else:
+            self.ind_next = self.ind_neighbours[np.random.randint(len(self.ind_neighbours))]
+        t2 = time.time()
+        print("Path planning takes: ", t2 - t1)
 
-    def get_location_from_ind_grid(self, ind):
-        return Location(self.knowledge.coordinates_grid[ind, 0],
-                        self.knowledge.coordinates_grid[ind, 1],
-                        self.knowledge.coordinates_grid[ind, 2])
-
-    # def search_for_new_location(self):
-    #     ind_next = np.abs(get_excursion_prob_1d(self.knowledge.mu_cond, self.knowledge.Sigma_cond,
-    #                                             self.knowledge.threshold) - .5).argmin()
-    #     return self.get_location_from_ind(ind_next)
-
-    def get_eibv_1d(self, ind_candidate):
-        variance_post = self.knowledge.spde_model.candidate(ks=ind_candidate) # update the field
+    def get_eibv_from_gmrf_model(self, ind_candidate):
+        variance_post = self.gmrf_model.candidate(ks=ind_candidate)  # update the field
         eibv = 0
-        for i in range(self.knowledge.mu_cond.shape[0]):
-            eibv += (mvn.mvnun(-np.inf, self.knowledge.threshold, self.knowledge.mu_cond[i], variance_post[i])[0] -
-                     mvn.mvnun(-np.inf, self.knowledge.threshold, self.knowledge.mu_cond[i], variance_post[i])[0] ** 2)
+        for i in range(self.knowledge.mu.shape[0]):
+            eibv += (mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] -
+                     mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] ** 2)
         return eibv
-
-    def get_excursion_prob_1d(self):
-        Variance = self.knowledge.spde_model.mvar()
-        excursion_prob = np.zeros_like(self.knowledge.mu_cond)
-        for i in range(excursion_prob.shape[0]):
-            excursion_prob[i] = norm.cdf(self.knowledge.threshold, self.knowledge.mu_cond[i], Variance[i, i])
-        return excursion_prob
-
-    def get_excursion_set(self):
-        excursion_set = np.zeros_like(self.knowledge.mu_cond)
-        excursion_set[self.knowledge.mu_cond < self.knowledge.threshold] = True
-        return excursion_set
-
-
 
 
