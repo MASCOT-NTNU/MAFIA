@@ -14,13 +14,15 @@ depth = np.load(FILEPATH + "models/depth.npy").reshape(-1, 1)
 coordinates = np.hstack((lats, lons, depth))
 
 sinmod = SINMOD()
-sinmod.load_sinmod_data(raw_data=True)
+sinmod.load_sinmod_data(raw_data=True, filenames=[""])
 # sinmod.get_data_at_coordinates(coordinates)
 
-
+#%%
 #% Step II: extract data by section
 p1 = coordinates[0:5000,:]
 sinmod.get_data_at_coordinates(p1)
+
+#%%
 p2 = coordinates[5000:10000,:]
 sinmod.get_data_at_coordinates(p2)
 p3 = coordinates[10000:15000,:]
