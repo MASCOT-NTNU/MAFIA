@@ -11,7 +11,7 @@ class spde:
         self.P = 11
         self.n = self.M*self.N*self.P
         self.define(model=model)
-        print("he")
+        print("SPDE is set up successfully!")
 
     
     def reduce(self,x,y,z):
@@ -65,16 +65,51 @@ class spde:
         Q_fac = cholesky(Q)
         return(self.mvar(Q_fac = Q_fac,n=n))
 
-    def update(self,rel,ks):
-        self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
-        F = np.zeros(self.M*self.N*self.P)
+    def update(self, rel, ks):
+        self.Q[ks, ks] = self.Q[ks, ks] + 1 / self.sigma[0] ** 2
+        F = np.zeros(self.M * self.N * self.P)
         F[ks] = 1
         V = self.Q_fac.solve_A(F.transpose())
-        W = F@V + self.sigma[0]**2 + self.sigma[1]**2
-        U = V/W
-        c = F@self.mu - rel
-        self.mu = self.mu - U.transpose()*c
+        W = F @ V + self.sigma[0] ** 2 + self.sigma[1] ** 2
+        U = V / W
+        c = F @ self.mu - rel
+        self.mu = self.mu - U.transpose() * c
         self.Q_fac = cholesky(self.Q)
+
+
+        # def update(self,rel,ks):
+    #     print("ks: ", ks)
+    #     mu = self.mu.reshape(-1,1)
+    #
+    #
+    #     self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2
+    #
+    #     F = np.zeros([len(ks),self.M*self.N*self.P])
+    #     for i in range(len(ks)):
+    #         F[i, ks[i]] = True
+    #
+    #
+    #
+    #     V = self.Q_fac.solve_A(F.transpose())
+    #     W = F@V + self.sigma[0]**2 + self.sigma[1]**2
+    #     # np.linalg.solve(W, V.T)
+    #     U = (V/W).reshape(1, -1)
+    #     print("F: ", F.shape)
+    #     print("mu: ", mu.shape)
+    #     print("rel: ", rel.shape)
+    #
+    #     print("U: ", U.shape)
+    #
+    #     c = F.T@mu - rel
+    #     print('c: ', c.shape)
+    #     # print("U: ", U.transpose()@c)
+    #     print("U*C", (U.T@c).shape)
+    #
+    #
+    #     mu = mu - (U.T@c).flatten()
+    #     self.mu = mu.flatten()
+    #     print("mucond: ", self.mu.shape)
+        # self.Q_fac = cholesky(self.Q)
 
     def mvar(self,Q_fac = None, n=40):
         if Q_fac is None: 

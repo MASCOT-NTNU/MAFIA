@@ -1,25 +1,56 @@
+
+"""
+This script tests grid generation
+"""
+import os
 import pandas as pd
 
-# from GOOGLE.Field.Grid.gridWithinPolygonGenerator import GridGenerator
-from GOOGLE.Simulation_2DNidelva.Field.Grid.HexagonalGrid2D import HexgonalGrid2DGenerator
-from usr_func import *
+working_directory = os.getcwd()
 
-PATH_OPERATION_AREA = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/GOOGLE/Simulation_2DNidelva/Config/OpArea.csv"
-PATH_MUNKHOLMEN = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/GOOGLE/Simulation_2DNidelva/Config/Munkholmen.csv"
-DISTANCE_LATERAL = 150
+filepath = working_directory + "/MAFIA/"
+grid = pd.read_csv(filepath + "Simulation/PreConfig/Grid/Grid.csv").to_numpy()
 
-polygon = pd.read_csv(PATH_OPERATION_AREA).to_numpy()
-munkholmen = pd.read_csv(PATH_MUNKHOLMEN).to_numpy()
-gridGenerator = HexgonalGrid2DGenerator(polygon_border=polygon, polygon_obstacle=munkholmen, distance_neighbour=500)
-# gridGenerator = GridGenerator(polygon=polygon, depth=[0], distance_neighbour=DISTANCE_LATERAL, no_children=6, points_allowed=5000)
-# grid = gridGenerator.grid
-coordinates = gridGenerator.coordinates2d
+import numpy as np
 
-plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
-plt.plot(polygon[:, 1], polygon[:, 0], 'r-.')
-plt.plot(munkholmen[:, 1], munkholmen[:, 0], 'r-.')
-plt.show()
+from MAFIA.Simulation.PreConfig.Grid.Location import Location
+loc = Location(324, 234, 0)
 
+
+def get_ind_at_location3d_xyz(coordinates, location):
+    dist_x = coordinates[:, 0] - location.x
+    dist_y = coordinates[:, 1] - location.y
+    dist_z = coordinates[:, 2] - location.z
+    dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
+    ind = np.where(dist == np.amin(dist))[0]
+    return ind
+import time
+
+t1 = time.time()
+ind = get_ind_at_location3d_xyz(grid[:, -3:], loc)
+t2 = time.time()
+print("Time consumed: on CPU: ", t2 - t1)
+
+
+from numba import jit
+@jit(nopython=True)
+def get_ind_at_location3d_xyz_jit(coordinates, x, y, z):
+    dist_x = coordinates[:, 0] - x
+    dist_y = coordinates[:, 1] - y
+    dist_z = coordinates[:, 2] - z
+
+    dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
+    print(dist.shape)
+    ind = np.where(dist == np.amin(dist))[0]
+    return ind
+
+
+ind = get_ind_at_location3d_xyz_jit(grid[:, -3:], loc.x, loc.y, loc.z)
+
+t1 = time.time()
+ind = get_ind_at_location3d_xyz_jit(grid[:, -3:], loc.x, loc.y, loc.z)
+t2 = time.time()
+print("Time consumed: on para: ", t2 - t1)
+print(ind)
 
 #%% plot the corresponding layer with coordinates
 import numpy as np
