@@ -8,27 +8,18 @@ import os
 import numpy as np
 from usr_func import latlon2xy
 
+# == Sys
+working_directory = os.getcwd()
+FIGPATH = working_directory + "/MAFIA/fig/"
+FILEPATH = working_directory + "/MAFIA/"
+# ==
+
 # == GP kernel
 THRESHOLD = 27
 # ==
 
-# ==
-DISTANCE_SAME_LOCATION = 1
-# ==
-
-# == Grid
-DISTANCE_NEIGHBOUR = 120
-DEPTH_ORIGIN = 0
-DISTANCE_LATERAL = DISTANCE_NEIGHBOUR
-DISTANCE_VERTICAL = .5
-DISTANCE_SELF = 5
-# ==
-
 # == Path planner
 NUM_STEPS = 80
-working_directory = os.getcwd()
-FIGPATH = working_directory + "/MAFIA/fig/"
-FILEPATH = working_directory + "/MAFIA/"
 # ==
 
 # == Boundary box
@@ -41,7 +32,4 @@ xbox, ybox = latlon2xy(LAT_BOX, LON_BOX, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 ROTATED_ANGLE = np.math.atan2(xbox[1] - xbox[0], ybox[1] - ybox[0])
 # ==
 
-# == PLotting
-from matplotlib.cm import get_cmap
-CMAP = get_cmap("BrBG", 10)
-# ==
+

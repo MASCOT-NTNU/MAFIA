@@ -8,8 +8,8 @@ Date: 2022-03-21
 from usr_func import *
 from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
 from MAFIA.Simulation.Simulator.Sampler import Sampler
-from MAFIA.Simulation.Field.Grid.Location import Location
-from MAFIA.Simulation.Field.Knowledge.Knowledge import Knowledge
+from MAFIA.Simulation.PreConfig.Grid.Location import Location
+from MAFIA.Simulation.Knowledge.Knowledge import Knowledge
 from MAFIA.Simulation.Plotting.KnowledgePlot import KnowledgePlot
 from MAFIA.Simulation.Config.Config import *
 from MAFIA.spde import spde
@@ -42,9 +42,9 @@ class PathPlanner:
         print("SPDE grid is loaded successfully!")
 
     def load_waypoint(self):
-        self.coordinates_waypoint = pd.read_csv(FILEPATH + "Simulation/Field/Grid/Grid.csv").to_numpy()
+        self.coordinates_waypoint = pd.read_csv(FILEPATH + "Simulation/PreConfig/Grid/Grid.csv").to_numpy()
         self.coordinates_waypoint_xyz = self.coordinates_waypoint[:, -3:]
-        neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/Field/Grid/Neighbours.p", 'rb')
+        neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/PreConfig/Grid/Neighbours.p", 'rb')
         self.neighbour_hash_table_waypoint = pickle.load(neighbour_hash_table_filehandler)
         neighbour_hash_table_filehandler.close()
         print("Waypoint is loaded successfully!")
@@ -54,7 +54,7 @@ class PathPlanner:
         print("Function calls are initialised successfully! Enjoy fast and furious!")
 
     def load_ground_truth(self):
-        path_mu_truth = FILEPATH + "Simulation/Field/Data/data_mu_truth.csv"
+        path_mu_truth = FILEPATH + "Simulation/PreConfig/Data/data_mu_truth.csv"
         self.ground_truth = pd.read_csv(path_mu_truth).to_numpy()[:, -1].reshape(-1, 1)
 
     def setup_knowledge(self):

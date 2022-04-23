@@ -8,11 +8,11 @@ import pandas as pd
 working_directory = os.getcwd()
 
 filepath = working_directory + "/MAFIA/"
-grid = pd.read_csv(filepath + "Simulation/Field/Grid/Grid.csv").to_numpy()
+grid = pd.read_csv(filepath + "Simulation/PreConfig/Grid/Grid.csv").to_numpy()
 
 import numpy as np
 
-from MAFIA.Simulation.Field.Grid.Location import Location
+from MAFIA.Simulation.PreConfig.Grid.Location import Location
 loc = Location(324, 234, 0)
 
 

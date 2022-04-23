@@ -6,8 +6,9 @@ Date: 2022-02-25
 """
 
 
-from usr_func import *
-from MAFIA.Simulation.Field.Grid.HexagonalGrid2D import HexgonalGrid2DGenerator
+# from usr_func import *
+import time, numpy as np
+from MAFIA.Simulation.PreConfig.Grid.HexagonalGrid2D import HexgonalGrid2DGenerator
 
 
 class HexgonalGrid3DGenerator:
@@ -15,7 +16,7 @@ class HexgonalGrid3DGenerator:
     def __init__(self, polygon_border=None, polygon_obstacle=None, depth=None, neighbour_distance=0):
         self.depth = depth
         self.grid = HexgonalGrid2DGenerator(polygon_border=polygon_border, polygon_obstacle=polygon_obstacle,
-                                       distance_neighbour=neighbour_distance)
+                                            distance_neighbour=neighbour_distance)
         self.coordinates2d = self.grid.coordinates2d
         self.get_3d_coordinates()
 
@@ -29,6 +30,4 @@ class HexgonalGrid3DGenerator:
         t2 = time.time()
         print("3D coordianates are created successfully! Time consumed: ", t2 - t1)
 
-    # @property
-    # def coordinates3d(self):
-    #     return self.coordinates
+

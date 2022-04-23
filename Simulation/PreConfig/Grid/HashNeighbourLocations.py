@@ -17,7 +17,7 @@ class HashNeighbourLocations:
         self.get_neighbours_hash_table()
 
     def load_coordinates(self):
-        self.coordinates = pd.read_csv(FILEPATH + "Simulation/Field/Grid/Grid.csv").to_numpy()
+        self.coordinates = pd.read_csv(FILEPATH + "Simulation/PreConfig/Grid/Grid.csv").to_numpy()
 
     def get_neighbours_hash_table(self):
         self.neighbour_hash_table = dict()
@@ -34,7 +34,7 @@ class HashNeighbourLocations:
             self.neighbour_hash_table[i] = list(self.ind_neighbour)
         t2 = time.time()
 
-        filehandler = open(FILEPATH+'/Simulation/Field/Grid/Neighbours.p', 'wb')
+        filehandler = open(FILEPATH+'/Simulation/PreConfig/Grid/Neighbours.p', 'wb')
         with filehandler as f:
             pickle.dump(self.neighbour_hash_table, f)
         f.close()

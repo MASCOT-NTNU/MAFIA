@@ -11,7 +11,7 @@ next_location = MyopicPlanning3D(Knowledge, Experience).next_waypoint
 """
 
 from usr_func import *
-from MAFIA.Simulation.Field.Grid.Location import Location
+from MAFIA.Simulation.PreConfig.Grid.Location import Location
 import time
 
 

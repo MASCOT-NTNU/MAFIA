@@ -4,13 +4,19 @@ Author: Yaolin Ge
 Contact: yaolin.ge@ntnu.no
 Date: 2022-03-21
 """
-import numpy as np
+
+# == Grid set up
+DISTANCE_NEIGHBOUR = 120
+# ==
+
+#%% Step I: create wgs coordinates
+
 import pandas as pd
-from MAFIA.Simulation.Field.Grid.HexagonalGrid3D import HexgonalGrid3DGenerator
+from MAFIA.Simulation.PreConfig.Grid.HexagonalGrid3D import HexgonalGrid3DGenerator
 from MAFIA.Simulation.Config.Config import *
 from usr_func import latlon2xy
 
-polygon_border = FILEPATH + "Simulation/Config/polygon_border.csv"
+polygon_border = FILEPATH + "Simulation/PreConfig/polygon_border.csv"
 polygon_border = pd.read_csv(polygon_border).to_numpy()
 polygon_obstacle = np.empty([10, 2])
 
@@ -18,17 +24,20 @@ depth = [0.5, 1., 1.5, 2., 2.5, 3.0, 3.5, 4.0, 4.5, 5]
 gridGenerator = HexgonalGrid3DGenerator(polygon_border=polygon_border, polygon_obstacle=polygon_obstacle,
                                         depth=depth, neighbour_distance=DISTANCE_NEIGHBOUR)
 coordinates = gridGenerator.coordinates
-grid_x, grid_y = latlon2xy(coordinates[:, 0], coordinates[:, 1], LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 
-grid = np.vstack((grid_x, grid_y, coordinates[:, 2])).T
-lat_origin = LATITUDE_ORIGIN * np.ones_like(grid_x)
-lon_origin = LONGITUDE_ORIGIN * np.ones_like(grid_x)
-wgs_origin = np.vstack((lat_origin, lon_origin)).T
+#%% Step II: convert wgs to xyz
 
-dataset = np.hstack((coordinates, wgs_origin, grid))
+x, y = latlon2xy(coordinates[:, 0], coordinates[:, 1], LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+z = coordinates[:, 2]
+xyz = np.vstack((x, y, z)).T
+lat_origin = LATITUDE_ORIGIN * np.ones_like(x)
+lon_origin = LONGITUDE_ORIGIN * np.ones_like(x)
+origin = np.vstack((lat_origin, lon_origin)).T
 
-df = pd.DataFrame(dataset, columns=['lat', 'lon', 'depth', 'lat_origin', 'lon_origin', 'x', 'y', 'z'])
-df.to_csv(FILEPATH + "Simulation/Field/Grid/Grid.csv", index=False)
+dataset = np.hstack((xyz, coordinates, origin, ))
+
+df = pd.DataFrame(dataset, columns=['x', 'y', 'z', 'lat', 'lon', 'depth', 'lat_origin', 'lon_origin'])
+df.to_csv(FILEPATH + "Simulation/Config/Grid/Grid.csv", index=False)
 
 
 import plotly.graph_objects as go

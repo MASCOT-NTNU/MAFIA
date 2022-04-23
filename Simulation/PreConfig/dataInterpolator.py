@@ -30,7 +30,7 @@ p5 = coordinates[20000:,:]
 sinmod.get_data_at_coordinates(p5)
 
 #%%
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/Simulation/Field/Data/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/Simulation/PreConfig/Data/"
 import os
 import pandas as pd
 

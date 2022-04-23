@@ -2,17 +2,16 @@
 from usr_func import *
 
 from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
-from MAFIA.Simulation.Kernel.Kernel import Kernel
-from MAFIA.Simulation.Field.Grid.Location import *
-from MAFIA.Simulation.Field.Knowledge.Knowledge import Knowledge
+from MAFIA.Simulation.PreConfig.Grid.Location import *
+from MAFIA.Simulation.Knowledge.Knowledge import Knowledge
 from MAFIA.spde import spde
 import pickle
 
 FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
 
 
-coordinates = pd.read_csv(FILEPATH + "Simulation/Field/Grid/Grid.csv").to_numpy()
-neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/Field/Grid/Neighbours.p", 'rb')
+coordinates = pd.read_csv(FILEPATH + "Simulation/PreConfig/Grid/Grid.csv").to_numpy()
+neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/PreConfig/Grid/Neighbours.p", 'rb')
 neighbour_hash_table = pickle.load(neighbour_hash_table_filehandler)
 neighbour_hash_table_filehandler.close()
 
