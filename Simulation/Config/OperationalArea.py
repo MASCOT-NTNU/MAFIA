@@ -26,7 +26,7 @@ FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/Simulation/
 PATH_OPERATION_AREA = FILEPATH + "OperationalArea.csv"
 # PATH_MUNKHOLMEN = FILEPATH + "Munkholmen.csv"
 
-''' Note
+''' Note!!!
 Sometimes the geometry will have multiple polygons due to merging of different parts as the result of the buffer size
 Be careful with the check conditions
 '''

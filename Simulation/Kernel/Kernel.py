@@ -11,7 +11,7 @@ import numpy as np
 
 class Kernel:
 
-    def __init__(self, knowledge):
+    def __init__(self, knowledge=None):
         self.knowledge = knowledge
         pass
 

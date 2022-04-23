@@ -1,8 +1,8 @@
 
 
-from GOOGLE.Simulation_2DNidelva.GPKernel.GPKernel import GPKernel
+from MAFIA.Simulation.Kernel.Kernel import Kernel
 
-t = GPKernel()
+t = Kernel()
 
 
 #%%
