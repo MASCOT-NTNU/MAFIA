@@ -4,10 +4,10 @@ Author: Yaolin Ge
 Contact: yaolin.ge@ntnu.no
 Date: 2022-03-16
 """
-import numpy as np
+#% Step I: load coordinates to extract data from SINMOD
 from DataHandler.SINMOD import SINMOD
+from MAFIA.Simulation.Config.Config import *
 
-FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
 lats = np.load(FILEPATH + "models/lats.npy").reshape(-1, 1)
 lons = np.load(FILEPATH + "models/lons.npy").reshape(-1, 1)
 depth = np.load(FILEPATH + "models/depth.npy").reshape(-1, 1)
@@ -17,7 +17,8 @@ sinmod = SINMOD()
 sinmod.load_sinmod_data(raw_data=True)
 # sinmod.get_data_at_coordinates(coordinates)
 
-#%% extract data by section
+
+#% Step II: extract data by section
 p1 = coordinates[0:5000,:]
 sinmod.get_data_at_coordinates(p1)
 p2 = coordinates[5000:10000,:]
@@ -29,8 +30,8 @@ sinmod.get_data_at_coordinates(p4)
 p5 = coordinates[20000:,:]
 sinmod.get_data_at_coordinates(p5)
 
-#%%
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/Simulation/PreConfig/Data/"
+#% Step III: save data to scv section by section
+datapath = FILEPATH+"Simulation/Config/Data/"
 import os
 import pandas as pd
 
@@ -56,7 +57,7 @@ df = pd.concat([df1, df2, df3, df4, df5], ignore_index=True, sort=False)
 df.to_csv(datapath + "data_mu_truth.csv", index=False)
 
 #%%
-# df
+
 # import matplotlib.pyplot as plt
 # plt.scatter(df[:, 1], df[:, 0], c=df[:, 2], cmap='RdBu', vmin=16, vmax=32)
 # plt.colorbar()
@@ -89,5 +90,5 @@ fig = go.Figure(data=[go.Scatter3d(
 # tight layout
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
 import plotly
-plotly.offline.plot(fig, filename="/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/fig/data.html", auto_open=True)
+plotly.offline.plot(fig, filename=FILEPATH+"/fig/data.html", auto_open=True)
 

@@ -11,8 +11,6 @@ class spde:
         self.P = 11
         self.n = self.M*self.N*self.P
         self.define(model=model)
-        print("SPDE is set up successfully!")
-
     
     def reduce(self,x,y,z):
         tx,ty,tz = np.meshgrid(np.arange(x[0],x[1]),np.arange(y[0],y[1]),np.arange(z[0],z[1]))

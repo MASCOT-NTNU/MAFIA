@@ -102,9 +102,9 @@ class KnowledgePlot:
         #     )
 
         fig.add_trace(go.Scatter3d(
-            x=[self.knowledge.current_location.y],
-            y=[self.knowledge.current_location.x],
-            z=[-self.knowledge.current_location.z],
+            x=[self.knowledge.current_location.Y_START],
+            y=[self.knowledge.current_location.X_START],
+            z=[-self.knowledge.current_location.Z_START],
             mode='markers',
             marker=dict(
                 size=20,
@@ -117,9 +117,9 @@ class KnowledgePlot:
         )
 
         fig.add_trace(go.Scatter3d(
-            x=[self.knowledge.next_location.y],
-            y=[self.knowledge.next_location.x],
-            z=[-self.knowledge.next_location.z],
+            x=[self.knowledge.next_location.Y_START],
+            y=[self.knowledge.next_location.X_START],
+            z=[-self.knowledge.next_location.Z_START],
             mode='markers',
             marker=dict(
                 size=20,
@@ -133,9 +133,9 @@ class KnowledgePlot:
 
         trajectory = []
         for i in range(len(self.knowledge.trajectory)):
-            trajectory.append([self.knowledge.trajectory[i].y,
-                               self.knowledge.trajectory[i].x,
-                               self.knowledge.trajectory[i].z])
+            trajectory.append([self.knowledge.trajectory[i].Y_START,
+                               self.knowledge.trajectory[i].X_START,
+                               self.knowledge.trajectory[i].Z_START])
 
         if trajectory:
             trajectory = np.array(trajectory)

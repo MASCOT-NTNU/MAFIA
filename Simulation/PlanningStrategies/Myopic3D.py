@@ -11,7 +11,7 @@ next_location = MyopicPlanning3D(Knowledge, Experience).next_waypoint
 """
 
 from usr_func import *
-from MAFIA.Simulation.PreConfig.Grid.Location import Location
+from MAFIA.Simulation.PreConfig.WaypointGraph.Location import Location
 import time
 
 
@@ -47,7 +47,7 @@ class MyopicPlanning3D:
     def filter_neighbouring_loc(self):
         t1 = time.time()
         id = []
-        self.ind_neighbour_locations = self.knowledge.neighbour_hash_table_waypoint[
+        self.ind_neighbour_locations = self.knowledge.hash_neighbours[
             self.knowledge.ind_current_location_waypoint]
         vec1 = self.get_vector_between_locations(self.knowledge.previous_location, self.knowledge.current_location)
         for i in range(len(self.ind_neighbour_locations)):
@@ -72,15 +72,15 @@ class MyopicPlanning3D:
         return ind_candidate_grid
 
     def get_vector_between_locations(self, loc_start, loc_end):
-        dx = loc_end.x - loc_start.x
-        dy = loc_end.y - loc_start.y
-        dz = loc_end.z - loc_start.z
+        dx = loc_end.X_START - loc_start.X_START
+        dy = loc_end.Y_START - loc_start.Y_START
+        dz = loc_end.Z_START - loc_start.Z_START
         return vectorise([dx, dy, dz])
 
     def get_location_from_ind_waypoint(self, ind):
-        return Location(self.knowledge.coordinates_waypoint[ind, 0],
-                        self.knowledge.coordinates_waypoint[ind, 1],
-                        self.knowledge.coordinates_waypoint[ind, 2])
+        return Location(self.knowledge.waypoints[ind, 0],
+                        self.knowledge.waypoints[ind, 1],
+                        self.knowledge.waypoints[ind, 2])
 
     def get_location_from_ind_grid(self, ind):
         return Location(self.knowledge.coordinates_grid[ind, 0],

@@ -2,7 +2,7 @@
 from usr_func import *
 
 from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
-from MAFIA.Simulation.PreConfig.Grid.Location import *
+from MAFIA.Simulation.PreConfig.WaypointGraph.Location import *
 from MAFIA.Simulation.Knowledge.Knowledge import Knowledge
 from MAFIA.spde import spde
 import pickle
@@ -10,8 +10,8 @@ import pickle
 FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
 
 
-coordinates = pd.read_csv(FILEPATH + "Simulation/PreConfig/Grid/Grid.csv").to_numpy()
-neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/PreConfig/Grid/Neighbours.p", 'rb')
+coordinates = pd.read_csv(FILEPATH + "Simulation/PreConfig/WaypointGraph/WaypointGraph.csv").to_numpy()
+neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/PreConfig/WaypointGraph/HashNeighbours.p", 'rb')
 neighbour_hash_table = pickle.load(neighbour_hash_table_filehandler)
 neighbour_hash_table_filehandler.close()
 

@@ -6,24 +6,19 @@ Date: 2022-02-23
 """
 
 import geopandas
-import pandas as pd
-import shapely
-import shapely.geometry.polygon
-from shapely.geometry import Polygon, GeometryCollection
 from usr_func import *
-from rdp import rdp
+from MAFIA.Simulation.Config.Config import *
 BUFFER_SIZE_BORDER = -100 # [m]
 BUFFER_SIZE_MUNKHOLMEN = 50 # [m]
 
 '''
 Path
 '''
-PATH_SHAPE_FILE = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/GIS/Munkholmen.shp" # remember to copy all the
+PATH_SHAPE_FILE = FILEPATH + "GIS/Munkholmen.shp" # remember to copy all the
 # other files in as well
-BOUNDARY_SHAPE_FILE = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/GIS/boundary.csv"
+BOUNDARY_SHAPE_FILE = FILEPATH + "GIS/boundary.csv"
 
-FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/Simulation/Config/"
-PATH_OPERATION_AREA = FILEPATH + "OperationalArea.csv"
+PATH_OPERATION_AREA = FILEPATH + "Simulation/Config/OperationalArea.csv"
 # PATH_MUNKHOLMEN = FILEPATH + "Munkholmen.csv"
 
 ''' Note!!!
@@ -31,13 +26,11 @@ Sometimes the geometry will have multiple polygons due to merging of different p
 Be careful with the check conditions
 '''
 
-PATH_FILE = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
-
-boundary = np.load(PATH_FILE+"models/grid.npy")
+boundary = np.load(FILEPATH+"models/grid.npy")
 boundary[[2, -1]] = boundary[[-1, 2]]
 
 df = pd.DataFrame(boundary[:, 2:], columns=['lat', 'lon'])
-df.to_csv(PATH_FILE+"GIS/boundary.csv", index=False)
+df.to_csv(FILEPATH+"GIS/boundary.csv", index=False)
 
 
 class OpArea:
@@ -90,7 +83,7 @@ class OpArea:
         plt.show()
 
         df = pd.DataFrame(self.polygon_operational_area, columns=['lat', 'lon'])
-        df.to_csv(FILEPATH+"Polygon_border.csv", index=False)
+        df.to_csv(FILEPATH+"Simulation/PreConfig/Polygon_border.csv", index=False)
 
     def get_intersected_polygons(self, polygon1, polygon2):
         return polygon1.intersection(polygon2)

@@ -56,15 +56,16 @@ mod.update(rel = measurement, pos = [xi,yi,zi])
 This updates the mean and precision matrix of the field within the class and returns nothing. 
 
 To get attributees from the class
+
 ```python
-mod.mu # the mean of the field (20250) vector
-mod.Q # the precision matrix of the field (20250x20250) sparse matrix
-mod.sigma # gaussian noise of the field (mod.sigma[1]) and the measurement noise of the AUV (mod.sigma[0])
-mod.Q_fac # the choleksy factorized Q. This is a object returned from the C library cholmod
-mod.lats # latitude boundary of the field
-mod.lons #longitude boundary of the field 
-mod.x # x boundary of the field
-mod.y # y boundary of the field
+mod.mu  # the mean of the field (20250) vector
+mod.Q  # the precision matrix of the field (20250x20250) sparse matrix
+mod.sigma  # gaussian noise of the field (mod.sigma[1]) and the measurement noise of the AUV (mod.sigma[0])
+mod.Q_fac  # the choleksy factorized Q. This is a object returned from the C library cholmod
+mod.lats  # latitude boundary of the field
+mod.lons  # longitude boundary of the field 
+mod.X_START  # x boundary of the field
+mod.Y_START  # y boundary of the field
 ```
 
 
