@@ -18,7 +18,7 @@ import time
 class MyopicPlanning3D:
 
     def __init__(self, knowledge=None, waypoints=None, gmrf_model=None, ind_current=None, ind_previous=None,
-                 hash_neighbours=None, hash_waypoint2gmrf=None):
+                 hash_neighbours=None, hash_waypoint2gmrf=None, ind_visited=None):
 
         self.knowledge = knowledge
         self.waypoints = waypoints
@@ -27,8 +27,7 @@ class MyopicPlanning3D:
         self.ind_previous = ind_previous
         self.hash_neighbours = hash_neighbours
         self.hash_waypoint2gmrf = hash_waypoint2gmrf
-        self.trajectory = []
-        self.ind_visited = []
+        self.ind_visited = ind_visited
 
         self.find_all_neighbours()
         self.smooth_filter_neighbours()

@@ -79,6 +79,9 @@ class Simulator:
 
     def run(self):
         ind_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
+        ind_previous = ind_waypoint
+        ind_visited = []
+        ind_visited.append(ind_waypoint)
         for i in range(NUM_STEPS):
             print("Step: ", i)
             ind_sample = self.hash_waypoint2gmrf[ind_waypoint]
@@ -92,55 +95,16 @@ class Simulator:
             self.knowledge.mu = self.gmrf_model.mu
             self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
-            ind_previous = 3791
             planner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints, gmrf_model=self.gmrf_model,
                                        ind_current=ind_waypoint, ind_previous=ind_previous,
-                                       hash_neighbours=self.hash_neighbours, hash_waypoint2gmrf=self.hash_waypoint2gmrf)
+                                       hash_neighbours=self.hash_neighbours, hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                       ind_visited=ind_visited)
+            ind_previous = ind_waypoint
+            ind_waypoint = planner.ind_next
+            ind_visited.append(ind_waypoint)
+            print("previous ind: ", ind_previous)
+            print("current ind: ", ind_waypoint)
 
-
-            fig = go.Figure(data=go.Scatter3d(
-                x=self.waypoints[planner.ind_candidates, 1],
-                y=self.waypoints[planner.ind_candidates, 0],
-                z=-self.waypoints[planner.ind_candidates, 2],
-                mode='markers',
-                marker=dict(color='red', size=10 - normalise(planner.EIBV, 0, 10))
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=self.waypoints[:, 1],
-                y=self.waypoints[:, 0],
-                z=-self.waypoints[:, 2],
-                mode='markers',
-                marker=dict(color='black', size=1, opacity=.1)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[self.waypoints[ind_previous, 1]],
-                y=[self.waypoints[ind_previous, 0]],
-                z=[-self.waypoints[ind_previous, 2]],
-                mode='markers',
-                marker=dict(color='blue', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[self.waypoints[ind_waypoint, 1]],
-                y=[self.waypoints[ind_waypoint, 0]],
-                z=[-self.waypoints[ind_waypoint, 2]],
-                mode='markers',
-                marker=dict(color='green', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[self.waypoints[planner.ind_next, 1]],
-                y=[self.waypoints[planner.ind_next, 0]],
-                z=[-self.waypoints[planner.ind_next, 2]],
-                mode='markers',
-                marker=dict(color='yellow', size=10, opacity=.4)
-            ))
-            plotly.offline.plot(fig, filename=FIGPATH + "neighbour.html", auto_open=True)
-
-            # self.knowledge.spde_model.update(rel=self.ground_truth[self.ind_sample].squeeze(), ks=self.ind_sample)
-            # self.knowledge.mu_cond = self.knowledge.spde_model.mu
-            # self.knowledge.Sigma_cond_diag = self.knowledge.spde_model.mvar()
-            # if i == 0:
-            #     break
-            break
         pass
 
 if __name__ == "__main__":
