@@ -628,40 +628,40 @@ kp = KnowledgePlot(knowledge=self.knowledge, vmin=16, vmax=28,
 
 
 
-#%%
-@jit(nopython=True)
-def get_ind_at_location3d_xyz(coordinates, x, y, z):
-    dist_x = coordinates[:, 0] - x
-    dist_y = coordinates[:, 1] - y
-    dist_z = coordinates[:, 2] - z
-    dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
-    ind = np.argmin(dist)
-    return ind
-
-def cpu_get_ind_at_location3d_xyz(coordinates, x, y, z):
-    dist_x = coordinates[:, 0] - x
-    dist_y = coordinates[:, 1] - y
-    dist_z = coordinates[:, 2] - z
-    dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
-    ind = np.argmin(dist)
-    return ind
-
-get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
-
-t1 = time.time()
-get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
-t2 = time.time()
-dt_gpu = t2 - t1
-print("GPU time: ", t2 - t1)
-
-
-t1 = time.time()
-cpu_get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
-t2 = time.time()
-dt_cpu = t2 - t1
-print("CPU time: ", t2 - t1)
-
-print("Speed up: ", dt_cpu / dt_gpu)
+# #%%
+# @jit(nopython=True)
+# def get_ind_at_location3d_xyz(coordinates, x, y, z):
+#     dist_x = coordinates[:, 0] - x
+#     dist_y = coordinates[:, 1] - y
+#     dist_z = coordinates[:, 2] - z
+#     dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
+#     ind = np.argmin(dist)
+#     return ind
+#
+# def cpu_get_ind_at_location3d_xyz(coordinates, x, y, z):
+#     dist_x = coordinates[:, 0] - x
+#     dist_y = coordinates[:, 1] - y
+#     dist_z = coordinates[:, 2] - z
+#     dist = dist_x ** 2 + dist_y ** 2 + dist_z ** 2
+#     ind = np.argmin(dist)
+#     return ind
+#
+# get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
+#
+# t1 = time.time()
+# get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
+# t2 = time.time()
+# dt_gpu = t2 - t1
+# print("GPU time: ", t2 - t1)
+#
+#
+# t1 = time.time()
+# cpu_get_ind_at_location3d_xyz(p.coordinates_waypoint, 1, 2, 3)
+# t2 = time.time()
+# dt_cpu = t2 - t1
+# print("CPU time: ", t2 - t1)
+#
+# print("Speed up: ", dt_cpu / dt_gpu)
 
 #%%
 
