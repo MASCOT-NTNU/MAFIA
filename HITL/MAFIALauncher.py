@@ -87,7 +87,7 @@ class MAFIALauncher:
         while not rospy.is_shutdown():
             if self.auv.init:
                 self.salinity.append(self.auv.currentSalinity)
-                if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
+                if self.auv.auv_handler.getState() == "waiting" and self.auv.last_state != "waiting":
                     print("Arrived the current location")
 
                     ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
@@ -122,19 +122,19 @@ class MAFIALauncher:
                     lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 
                     if self.counter_waypoint >= NUM_STEPS:
-                        self.auv_handler.setWaypoint(deg2rad(lat_waypoint),
-                                                     deg2rad(lon_waypoint), 0, speed=self.auv.speed)
+                        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), 0,
+                                                         speed=self.auv.speed)
                         rospy.signal_shutdown("Mission completed!!!")
                         break
                     else:
-                        self.auv_handler.setWaypoint(deg2rad(lat_waypoint),
-                                                     deg2rad(lon_waypoint), z_waypoint, speed=self.auv.speed)
+                        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint,
+                                                         speed=self.auv.speed)
                         print("previous ind: ", ind_previous_waypoint)
                         print("current ind: ", ind_current_waypoint)
 
-                self.last_state = self.auv_handler.getState()
-                self.auv_handler.spin()
-            self.rate.sleep()
+                self.auv.last_state = self.auv.auv_handler.getState()
+                self.auv.auv_handler.spin()
+            self.auv.rate.sleep()
 
 if __name__ == "__main__":
     s = MAFIALauncher()
