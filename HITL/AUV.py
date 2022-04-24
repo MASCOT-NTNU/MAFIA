@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 This script setup the AUV
 Author: Yaolin Ge
@@ -7,9 +7,7 @@ Date: 2022-04-24
 """
 
 
-import rospy
-from auv_handler import AuvHandler
-from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
+from Config.AdaframeConfig import *
 from usr_func import *
 from Config.Config import *
 
