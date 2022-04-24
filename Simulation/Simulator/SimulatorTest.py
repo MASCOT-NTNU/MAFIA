@@ -229,11 +229,13 @@ class Simulator:
 
             # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
             fig.write_image(FIGPATH+"myopic3d/P_{:03d}.jpg".format(i), width=1980, height=1080)
+
             ind_previous_waypoint = ind_current_waypoint
             ind_current_waypoint = self.pathplanner.ind_next
             ind_visited_waypoint.append(ind_current_waypoint)
             print("previous ind: ", ind_previous_waypoint)
             print("current ind: ", ind_current_waypoint)
+
             # os.system('say finished')
             if i == 50:
                 plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
