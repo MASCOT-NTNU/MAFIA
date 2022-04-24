@@ -13,7 +13,7 @@ from MAFIA.spde import spde
 import pickle
 
 # == Set up
-LAT_START = 63.448747,
+LAT_START = 63.448747
 LON_START = 10.416038
 DEPTH_START = .5
 X_START, Y_START = latlon2xy(LAT_START, LON_START, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
@@ -79,25 +79,26 @@ class Simulator:
     def run(self):
         ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         ind_previous_waypoint = ind_current_waypoint
-        ind_visited = []
-        ind_visited.append(ind_current_waypoint)
+        ind_visited_waypoint = []
+        ind_visited_waypoint.append(ind_current_waypoint)
         for i in range(NUM_STEPS):
             print("Step: ", i)
-            ind_sample = self.hash_waypoint2gmrf[ind_current_waypoint]
-            self.salinity_measured = self.simulated_truth[ind_sample][0]
+            ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
+            self.salinity_measured = self.simulated_truth[ind_sample_gmrf][0]
 
             t1 = time.time()
-            self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample)
+            self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
             t2 = time.time()
             print("Update consumed: ", t2 - t1)
 
             self.knowledge.mu = self.gmrf_model.mu
             self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
-            planner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints, gmrf_model=self.gmrf_model,
-                                       ind_current=ind_current_waypoint, ind_previous=ind_previous_waypoint,
-                                       hash_neighbours=self.hash_neighbours, hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                       ind_visited=ind_visited)
+            self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                gmrf_model=self.gmrf_model, ind_current=ind_current_waypoint,
+                                                ind_previous=ind_previous_waypoint, hash_neighbours=self.hash_neighbours,
+                                                hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                ind_visited=ind_visited_waypoint)
 
             # == plot gmrf section
             xrot = self.gmrf_grid[:, 0] * np.cos(ROTATED_ANGLE) - self.gmrf_grid[:, 1] * np.sin(ROTATED_ANGLE)
@@ -172,24 +173,24 @@ class Simulator:
                 marker=dict(color='red', size=10)
             ))
             fig.add_trace(go.Scatter3d(
-                x=[yrot[ind_visited]],
-                y=[xrot[ind_visited]],
-                z=[zrot[ind_visited]],
+                x=yrot[ind_visited_waypoint],
+                y=xrot[ind_visited_waypoint],
+                z=zrot[ind_visited_waypoint],
                 mode='markers+lines',
                 marker=dict(color='black', size=4),
-                line=dict(color='black')
+                line=dict(color='black', width=3)
             ))
             fig.add_trace(go.Scatter3d(
-                x=[yrot[planner.ind_next]],
-                y=[xrot[planner.ind_next]],
-                z=[zrot[planner.ind_next]],
+                x=[yrot[self.pathplanner.ind_next]],
+                y=[xrot[self.pathplanner.ind_next]],
+                z=[zrot[self.pathplanner.ind_next]],
                 mode='markers',
                 marker=dict(color='blue', size=10)
             ))
             fig.add_trace(go.Scatter3d(
-                x=yrot[planner.ind_candidates],
-                y=xrot[planner.ind_candidates],
-                z=zrot[planner.ind_candidates],
+                x=yrot[self.pathplanner.ind_candidates],
+                y=xrot[self.pathplanner.ind_candidates],
+                z=zrot[self.pathplanner.ind_candidates],
                 mode='markers',
                 marker=dict(color='green', size=5, opacity=.7)
             ))
@@ -226,15 +227,15 @@ class Simulator:
                 scene_camera=camera,
             )
 
-            plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
-
+            # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
+            fig.write_image(FIGPATH+"myopic3d/P_{:03d}.jpg".format(i), width=1980, height=1080)
             ind_previous_waypoint = ind_current_waypoint
-            ind_current_waypoint = planner.ind_next
-            ind_visited.append(ind_current_waypoint)
+            ind_current_waypoint = self.pathplanner.ind_next
+            ind_visited_waypoint.append(ind_current_waypoint)
             print("previous ind: ", ind_previous_waypoint)
             print("current ind: ", ind_current_waypoint)
             os.system('say finished')
-            if i == 20:
+            if i == 50:
                 break
         pass
 
