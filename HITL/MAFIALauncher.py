@@ -85,7 +85,7 @@ class MAFIALauncher:
         ind_visited_waypoint = []
         ind_visited_waypoint.append(ind_current_waypoint)
         while not rospy.is_shutdown():
-            if self.init:
+            if self.auv.init:
                 self.salinity.append(self.auv.currentSalinity)
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
