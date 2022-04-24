@@ -234,7 +234,7 @@ class Simulator:
             ind_visited_waypoint.append(ind_current_waypoint)
             print("previous ind: ", ind_previous_waypoint)
             print("current ind: ", ind_current_waypoint)
-            os.system('say finished')
+            # os.system('say finished')
             if i == 50:
                 break
         pass

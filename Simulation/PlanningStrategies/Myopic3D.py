@@ -15,6 +15,21 @@ from MAFIA.Simulation.Config.Config import *
 import time
 
 
+vectorize(['float32(float32, float32)'], target='cuda')
+def get_eibv_from_gpu(mu, SigmaDiag):
+  cdf = norm.cdf(THRESHOLD, mu, SigmaDiag)
+  bv = cdf*(1-cdf)
+  ibv = np.sum(bv)
+  return ibv
+
+
+def get_eibv_from_fast(mu, sigma):
+  p = norm.cdf(THRESHOLD, mu, sigma)
+  bv = p * (1 - p)
+  ibv = np.sum(bv)
+  return ibv
+
+
 class MyopicPlanning3D:
 
     def __init__(self, knowledge=None, waypoints=None, gmrf_model=None, ind_current=None, ind_previous=None,
@@ -75,10 +90,16 @@ class MyopicPlanning3D:
 
     def get_eibv_from_gmrf_model(self, ind_candidate):
         variance_post = self.gmrf_model.candidate(ks=ind_candidate)  # update the field
-        eibv = 0
-        for i in range(self.knowledge.mu.shape[0]):
-            eibv += (mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] -
-                     mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] ** 2)
+        # eibv = get_eibv_from_gpu(self.knowledge.mu, variance_post)
+        eibv = get_eibv_from_fast(self.knowledge.mu, variance_post)
         return eibv
+
+    # def get_eibv_from_gmrf_model(self, ind_candidate):
+    #     variance_post = self.gmrf_model.candidate(ks=ind_candidate)  # update the field
+    #     eibv = 0
+    #     for i in range(self.knowledge.mu.shape[0]):
+    #         eibv += (mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] -
+    #                  mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] ** 2)
+    #     return eibv
 
 
