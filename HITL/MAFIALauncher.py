@@ -37,11 +37,11 @@ class MAFIALauncher:
         print("S1-S9 complete!")
 
     def load_waypoint(self):
-        self.waypoints = pd.read_csv(FILEPATH + "Simulation/Config/WaypointGraph.csv").to_numpy()
+        self.waypoints = pd.read_csv(FILEPATH + "Config/WaypointGraph.csv").to_numpy()
         print("S1: Waypoint is loaded successfully!")
 
     def load_gmrf_grid(self):
-        self.gmrf_grid = pd.read_csv(FILEPATH + "Simulation/Config/GMRFGrid.csv").to_numpy()
+        self.gmrf_grid = pd.read_csv(FILEPATH + "Config/GMRFGrid.csv").to_numpy()
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
@@ -57,13 +57,13 @@ class MAFIALauncher:
         print("S5: Knowledge of the field is set up successfully!")
 
     def load_hash_neighbours(self):
-        neighbour_file = open(FILEPATH + "Simulation/Config/HashNeighbours.p", 'rb')
+        neighbour_file = open(FILEPATH + "Config/HashNeighbours.p", 'rb')
         self.hash_neighbours = pickle.load(neighbour_file)
         neighbour_file.close()
         print("S6: Neighbour hash table is loaded successfully!")
 
     def load_hash_waypoint2gmrf(self):
-        waypoint2gmrf_file = open(FILEPATH + "Simulation/Config/HashWaypoint2GMRF.p", 'rb')
+        waypoint2gmrf_file = open(FILEPATH + "Config/HashWaypoint2GMRF.p", 'rb')
         self.hash_waypoint2gmrf = pickle.load(waypoint2gmrf_file)
         waypoint2gmrf_file.close()
         print("S7: Waypoint2GMRF hash table is loaded successfully!")
