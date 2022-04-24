@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import sparse
 from sksparse.cholmod import cholesky
-from MAFIA.Simulation.Config.Config import FILEPATH
+from Config.Config import FILEPATH
 
 
 class spde:
