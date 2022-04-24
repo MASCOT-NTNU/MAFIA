@@ -84,6 +84,9 @@ class MAFIALauncher:
         ind_previous_waypoint = ind_current_waypoint
         ind_visited_waypoint = []
         ind_visited_waypoint.append(ind_current_waypoint)
+
+        self.set_waypoint_using_ind_waypoint(ind_current_waypoint)
+
         while not rospy.is_shutdown():
             if self.auv.init:
                 self.salinity.append(self.auv.currentSalinity)
@@ -135,6 +138,15 @@ class MAFIALauncher:
                 self.auv.last_state = self.auv.auv_handler.getState()
                 self.auv.auv_handler.spin()
             self.auv.rate.sleep()
+
+    def set_waypoint_using_ind_waypoint(self, ind_waypoint):
+        x_waypoint = self.waypoints[ind_waypoint, 0]
+        y_waypoint = self.waypoints[ind_waypoint, 1]
+        z_waypoint = self.waypoints[ind_waypoint, 2]
+        lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint, speed=self.auv.speed)
+        print("Set waypoint successfully!")
+
 
 if __name__ == "__main__":
     s = MAFIALauncher()
