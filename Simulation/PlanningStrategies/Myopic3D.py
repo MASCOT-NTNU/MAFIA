@@ -89,9 +89,16 @@ class MyopicPlanning3D:
         print("Path planning takes: ", t2 - t1)
 
     def get_eibv_from_gmrf_model(self, ind_candidate):
+        t1 = time.time()
         variance_post = self.gmrf_model.candidate(ks=ind_candidate)  # update the field
+        t2 = time.time()
+        # print("Update variance take: ", t2 - t1)
+
         # eibv = get_eibv_from_gpu(self.knowledge.mu, variance_post)
+        t1 = time.time()
         eibv = get_eibv_from_fast(self.knowledge.mu, variance_post)
+        t2 = time.time()
+        # print("EIBV calculation takes: ", t2 - t1)
         return eibv
 
     # def get_eibv_from_gmrf_model(self, ind_candidate):

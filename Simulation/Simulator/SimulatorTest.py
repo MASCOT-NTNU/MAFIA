@@ -235,8 +235,10 @@ class Simulator:
             print("previous ind: ", ind_previous_waypoint)
             print("current ind: ", ind_current_waypoint)
             # os.system('say finished')
-            if i == 50:
+            if i == NUM_STEPS-1:
+                plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
                 break
+            # break
         pass
 
 if __name__ == "__main__":
