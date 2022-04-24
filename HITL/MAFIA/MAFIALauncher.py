@@ -110,15 +110,24 @@ class MAFIALauncher:
                                                         ind_visited=ind_visited_waypoint)
 
                     self.counter_waypoint += 1
+
+                    ind_previous_waypoint = ind_current_waypoint
+                    ind_current_waypoint = self.pathplanner.ind_next
+                    ind_visited_waypoint.append(ind_current_waypoint)
+
+                    x_waypoint = self.waypoints[ind_current_waypoint, 0]
+                    y_waypoint = self.waypoints[ind_current_waypoint, 1]
+                    z_waypoint = self.waypoints[ind_current_waypoint, 2]
+                    lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+
                     if self.counter_waypoint >= NUM_STEPS:
-                        self.auv_handler.setWaypoint(deg2rad(self.waypoints[ind_current_waypoint, ]),
-                                                     deg2rad(self.lon_loc[self.ind_now]), 0, speed=self.speed)
+                        self.auv_handler.setWaypoint(deg2rad(lat_waypoint),
+                                                     deg2rad(lon_waypoint), 0, speed=self.auv.speed)
                         rospy.signal_shutdown("Mission completed!!!")
                         break
                     else:
-                        ind_previous_waypoint = ind_current_waypoint
-                        ind_current_waypoint = self.pathplanner.ind_next
-                        ind_visited_waypoint.append(ind_current_waypoint)
+                        self.auv_handler.setWaypoint(deg2rad(lat_waypoint),
+                                                     deg2rad(lon_waypoint), z_waypoint, speed=self.auv.speed)
                         print("previous ind: ", ind_previous_waypoint)
                         print("current ind: ", ind_current_waypoint)
 
