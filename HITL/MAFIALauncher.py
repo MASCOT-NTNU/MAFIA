@@ -96,6 +96,9 @@ class MAFIALauncher:
 
                 self.salinity.append(self.auv.currentSalinity)
 
+                self.auv.current_state = self.auv.auv_handler.getState()
+                print("AUV state: ", self.auv.current_state)
+
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
                     print("Longer than 10 mins, need a long break")
@@ -104,7 +107,7 @@ class MAFIALauncher:
                                            iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
                     t_start = time.time()
 
-                if self.auv.auv_handler.getState() == "waiting" and self.auv.last_state != "waiting":
+                if self.auv.auv_handler.getState() == "waiting":
                     print("Arrived the current location")
 
                     ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
@@ -168,8 +171,3 @@ class MAFIALauncher:
 if __name__ == "__main__":
     s = MAFIALauncher()
     s.run()
-
-
-
-
-
