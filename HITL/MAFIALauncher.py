@@ -91,7 +91,7 @@ class MAFIALauncher:
 
         while not rospy.is_shutdown():
             if self.auv.init:
-
+                print("Waypoint step: ", self.counter_waypoint)
                 t_end = time.time()
 
                 self.salinity.append(self.auv.currentSalinity)
