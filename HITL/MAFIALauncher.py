@@ -87,9 +87,23 @@ class MAFIALauncher:
 
         self.set_waypoint_using_ind_waypoint(ind_current_waypoint)
 
+        t_start = time.time()
+
         while not rospy.is_shutdown():
             if self.auv.init:
+
+                t_end = time.time()
+
                 self.salinity.append(self.auv.currentSalinity)
+
+                if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
+                        (t_end - t_start) % self.auv.max_submerged_time >= 0):
+                    print("Longer than 10 mins, need a long break")
+                    self.auv.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.auv.min_popup_time,
+                                           phone_number=self.auv.phone_number,
+                                           iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
+                    t_start = time.time()
+
                 if self.auv.auv_handler.getState() == "waiting" and self.auv.last_state != "waiting":
                     print("Arrived the current location")
 
@@ -125,6 +139,9 @@ class MAFIALauncher:
                     lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 
                     if self.counter_waypoint >= NUM_STEPS:
+                        self.auv.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.auv.min_popup_time,
+                                               phone_number=self.auv.phone_number,
+                                               iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
                         self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), 0,
                                                          speed=self.auv.speed)
                         rospy.signal_shutdown("Mission completed!!!")
