@@ -19,7 +19,7 @@ THRESHOLD = 27
 # ==
 
 # == Path planner
-NUM_STEPS = 100
+NUM_STEPS = 200
 # ==
 
 # == Boundary box
