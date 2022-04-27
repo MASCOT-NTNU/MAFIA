@@ -20,8 +20,8 @@ class AUV:
         self.rate = rospy.Rate(1)  # 1Hz
         self.auv_handler = AuvHandler(self.node_name, "MASCOT")
 
-        rospy.Subscriber("/Vehicle/Out/Temperature_filtered", Temperature, self.TemperatureCB)
-        rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
+        rospy.Subscriber("/IMC/Out/Temperature_filtered", Temperature, self.TemperatureCB)
+        rospy.Subscriber("/IMC/Out/Salinity", Salinity, self.SalinityCB)
         rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
 
         self.speed = 1.2  # m/s

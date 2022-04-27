@@ -50,8 +50,9 @@ mod.candidate(pos = [xi,yi,zi])
 This can be used to find the points which are most informative.
 
 When the AUV has sampled a point it can update the field with:
+
 ```python
-mod.update(rel = measurement, pos = [xi,yi,zi])
+mod.search_path_from_trees(rel=measurement, pos=[xi, yi, zi])
 ```
 This updates the mean and precision matrix of the field within the class and returns nothing. 
 
