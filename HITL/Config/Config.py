@@ -19,7 +19,7 @@ THRESHOLD = 27
 # ==
 
 # == Path planner
-NUM_STEPS = 10
+NUM_STEPS = 200
 # ==
 
 # == Boundary box
@@ -31,5 +31,3 @@ LONGITUDE_ORIGIN = LON_BOX[0]
 xbox, ybox = latlon2xy(LAT_BOX, LON_BOX, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 ROTATED_ANGLE = np.math.atan2(xbox[1] - xbox[0], ybox[1] - ybox[0])
 # ==
-
-

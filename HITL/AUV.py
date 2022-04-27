@@ -20,7 +20,6 @@ class AUV:
         self.rate = rospy.Rate(1)  # 1Hz
         self.auv_handler = AuvHandler(self.node_name, "MASCOT")
 
-        rospy.Subscriber("/IMC/Out/Temperature_filtered", Temperature, self.TemperatureCB)
         rospy.Subscriber("/IMC/Out/Salinity", Salinity, self.SalinityCB)
         rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
 
@@ -39,9 +38,6 @@ class AUV:
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
         self.phone_number = "+4792526858"
         self.iridium_destination = "manta-ntnu-1"
-
-    def TemperatureCB(self, msg):
-        self.currentTemperature = msg.value.data
 
     def SalinityCB(self, msg):
         self.currentSalinity = msg.value.data
