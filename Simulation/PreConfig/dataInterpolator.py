@@ -8,13 +8,16 @@ Date: 2022-03-16
 from DataHandler.SINMOD import SINMOD
 from MAFIA.Simulation.Config.Config import *
 
-lats = np.load(FILEPATH + "models/lats.npy").reshape(-1, 1)
-lons = np.load(FILEPATH + "models/lons.npy").reshape(-1, 1)
-depth = np.load(FILEPATH + "models/depth.npy").reshape(-1, 1)
+lats = np.load(FILEPATH + "models/lats_small.npy").reshape(-1, 1)
+lons = np.load(FILEPATH + "models/lons_small.npy").reshape(-1, 1)
+depth = np.load(FILEPATH + "models/depth_small.npy").reshape(-1, 1)
+# lats = np.load(FILEPATH + "models/lats.npy").reshape(-1, 1)
+# lons = np.load(FILEPATH + "models/lons.npy").reshape(-1, 1)
+# depth = np.load(FILEPATH + "models/depth.npy").reshape(-1, 1)
 coordinates = np.hstack((lats, lons, depth))
 
 # == get desired sinmod data
-SINMODPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/SINMOD_DATA/"
+SINMODPATH = FILEPATH + "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/SINMOD_DATA/"
 files = os.listdir(SINMODPATH)
 files.sort()
 filenames = []
