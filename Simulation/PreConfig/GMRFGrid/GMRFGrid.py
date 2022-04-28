@@ -7,9 +7,12 @@ Date: 2022-04-23
 import pandas as pd
 from MAFIA.Simulation.Config.Config import *
 
-lats = np.load(FILEPATH + "models/lats.npy")
-lons = np.load(FILEPATH + "models/lons.npy")
-depth = np.load(FILEPATH + "models/depth.npy")
+lats = np.load(FILEPATH + "models/lats_small.npy")
+lons = np.load(FILEPATH + "models/lons_small.npy")
+depth = np.load(FILEPATH + "models/depth_small.npy")
+# lats = np.load(FILEPATH + "models/lats.npy")
+# lons = np.load(FILEPATH + "models/lons.npy")
+# depth = np.load(FILEPATH + "models/depth.npy")
 x, y = latlon2xy(lats, lons, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 z = depth
 GMRFGrid = np.vstack((x, y, z)).T

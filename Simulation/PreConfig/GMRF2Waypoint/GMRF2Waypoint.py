@@ -143,8 +143,8 @@ class HashGMRF2Waypoint:
 if __name__ == "__main__":
     n = HashGMRF2Waypoint()
     n.check_hash()
-    n.check_in_3d()
-    # n.plot_mataching()
+    # n.check_in_3d()
+    n.plot_mataching()
 
 
 
