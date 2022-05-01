@@ -1,4 +1,7 @@
 # Checklist
+## Mission operation
+- After pre-survey, threshold and beta0, beta1 needs to be updated automatically, therefore they are observed and checked. Approved and run. 
+
 
 ### TODO:
 - Run sample script to install all libraries.

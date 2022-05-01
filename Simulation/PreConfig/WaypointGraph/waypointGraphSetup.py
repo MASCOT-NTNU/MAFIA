@@ -1,5 +1,5 @@
 # == WaypointGraph set up
-DISTANCE_NEIGHBOUR = 32
+DISTANCE_NEIGHBOUR = 120
 # ==
 
 # == Neighbour setting

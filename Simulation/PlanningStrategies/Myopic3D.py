@@ -101,12 +101,5 @@ class MyopicPlanning3D:
         # print("EIBV calculation takes: ", t2 - t1)
         return eibv
 
-    # def get_eibv_from_gmrf_model(self, ind_candidate):
-    #     variance_post = self.gmrf_model.candidate(ks=ind_candidate)  # update the field
-    #     eibv = 0
-    #     for i in range(self.knowledge.mu.shape[0]):
-    #         eibv += (mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] -
-    #                  mvn.mvnun(-np.inf, THRESHOLD, self.knowledge.mu[i], variance_post[i])[0] ** 2)
-    #     return eibv
 
 

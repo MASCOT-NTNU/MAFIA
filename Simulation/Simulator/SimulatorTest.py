@@ -13,8 +13,8 @@ from MAFIA.spde import spde
 import pickle
 
 # == Set up
-LAT_START = 63.452871
-LON_START = 10.394838
+LAT_START = 63.447231
+LON_START = 10.412948
 DEPTH_START = .5
 X_START, Y_START = latlon2xy(LAT_START, LON_START, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 Z_START = DEPTH_START
@@ -79,6 +79,8 @@ class Simulator:
     def run(self):
         ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         ind_previous_waypoint = ind_current_waypoint
+        ind_pioneer_waypoint = ind_current_waypoint
+        ind_next_waypoint = ind_current_waypoint
         ind_visited_waypoint = []
         ind_visited_waypoint.append(ind_current_waypoint)
         for i in range(NUM_STEPS):
@@ -94,11 +96,32 @@ class Simulator:
             self.knowledge.mu = self.gmrf_model.mu
             self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
-            self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                gmrf_model=self.gmrf_model, ind_current=ind_current_waypoint,
-                                                ind_previous=ind_previous_waypoint, hash_neighbours=self.hash_neighbours,
-                                                hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                ind_visited=ind_visited_waypoint)
+            if i == 0:
+                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                    gmrf_model=self.gmrf_model,
+                                                    ind_current=ind_current_waypoint,
+                                                    ind_previous=ind_previous_waypoint,
+                                                    hash_neighbours=self.hash_neighbours,
+                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                    ind_visited=ind_visited_waypoint)
+                ind_next_waypoint = self.pathplanner.ind_next
+                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                    gmrf_model=self.gmrf_model,
+                                                    ind_current=ind_next_waypoint,
+                                                    ind_previous=ind_current_waypoint,
+                                                    hash_neighbours=self.hash_neighbours,
+                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                    ind_visited=ind_visited_waypoint)
+                ind_pioneer_waypoint = self.pathplanner.ind_next
+            else:
+                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                    gmrf_model=self.gmrf_model,
+                                                    ind_current=ind_next_waypoint,
+                                                    ind_previous=ind_current_waypoint,
+                                                    hash_neighbours=self.hash_neighbours,
+                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                    ind_visited=ind_visited_waypoint)
+                ind_pioneer_waypoint = self.pathplanner.ind_next
 
             # == plot gmrf section
             xrot = self.gmrf_grid[:, 0] * np.cos(ROTATED_ANGLE) - self.gmrf_grid[:, 1] * np.sin(ROTATED_ANGLE)
@@ -174,6 +197,20 @@ class Simulator:
                 marker=dict(color='red', size=10)
             ))
             fig.add_trace(go.Scatter3d(
+                x=[yrot[ind_next_waypoint]],
+                y=[xrot[ind_next_waypoint]],
+                z=[zrot[ind_next_waypoint]],
+                mode='markers',
+                marker=dict(color='blue', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[yrot[ind_pioneer_waypoint]],
+                y=[xrot[ind_pioneer_waypoint]],
+                z=[zrot[ind_pioneer_waypoint]],
+                mode='markers',
+                marker=dict(color='green', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
                 x=yrot[ind_visited_waypoint],
                 y=xrot[ind_visited_waypoint],
                 z=zrot[ind_visited_waypoint],
@@ -182,18 +219,11 @@ class Simulator:
                 line=dict(color='black', width=3)
             ))
             fig.add_trace(go.Scatter3d(
-                x=[yrot[self.pathplanner.ind_next]],
-                y=[xrot[self.pathplanner.ind_next]],
-                z=[zrot[self.pathplanner.ind_next]],
-                mode='markers',
-                marker=dict(color='blue', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
                 x=yrot[self.pathplanner.ind_candidates],
                 y=xrot[self.pathplanner.ind_candidates],
                 z=zrot[self.pathplanner.ind_candidates],
                 mode='markers',
-                marker=dict(color='green', size=5, opacity=.7)
+                marker=dict(color='orange', size=5, opacity=.3)
             ))
             fig.update_coloraxes(colorscale="BrBG", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
                                                                   tickfont=dict(size=18, family="Times New Roman"),
@@ -232,13 +262,18 @@ class Simulator:
             fig.write_image(FIGPATH+"myopic3d/P_{:03d}.jpg".format(i), width=1980, height=1080)
 
             ind_previous_waypoint = ind_current_waypoint
-            ind_current_waypoint = self.pathplanner.ind_next
+            ind_current_waypoint = ind_next_waypoint
+            ind_next_waypoint = ind_pioneer_waypoint
             ind_visited_waypoint.append(ind_current_waypoint)
             print("previous ind: ", ind_previous_waypoint)
             print("current ind: ", ind_current_waypoint)
+            print("next ind: ", ind_next_waypoint)
+            print("pioneer ind: ", ind_pioneer_waypoint)
 
             if i == NUM_STEPS-1:
                 plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
+            # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
+            # break
 
 
 if __name__ == "__main__":
