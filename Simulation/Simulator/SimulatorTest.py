@@ -13,8 +13,8 @@ from MAFIA.spde import spde
 import pickle
 
 # == Set up
-LAT_START = 63.448747
-LON_START = 10.416038
+LAT_START = 63.452871
+LON_START = 10.394838
 DEPTH_START = .5
 X_START, Y_START = latlon2xy(LAT_START, LON_START, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 Z_START = DEPTH_START
@@ -44,7 +44,7 @@ class Simulator:
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
-        self.gmrf_model = spde(model=2)
+        self.gmrf_model = spde(model=2, reduce=True)
         print("S3: GMRF model is loaded successfully!")
 
     def load_prior(self):
@@ -116,7 +116,7 @@ class Simulator:
             #     y=self.yplot,
             #     z=self.zplot,
             #     mode='markers',
-            #     marker=dict(color='black', size=2, opacity=.0)
+            #     marker=dict(color=mu_plot, size=2, opacity=.0)
             # ))
             # fig.add_trace(go.Scatter3d(
             #     x=self.xplot,
@@ -125,6 +125,14 @@ class Simulator:
             #     mode='markers',
             #     marker=dict(color=mu_plot)
             # ))
+            # fig.add_trace(go.Scatter3d(
+            #     x=self.waypoints[:, 1],
+            #     y=self.waypoints[:, 0],
+            #     z=-self.waypoints[:, 2],
+            #     mode='markers',
+            #     marker=dict(color='black', size=1, opacity=.1)
+            # ))
+
             points_int, values_int = interpolate_3d(self.xplot, self.yplot, self.zplot, mu_plot)
             fig = go.Figure(data=go.Volume(
                 x=points_int[:, 0],
@@ -139,25 +147,18 @@ class Simulator:
                 caps=dict(x_show=False, y_show=False, z_show=False),
             ),
             )
-            # fig.add_trace(go.Scatter3d(
-            #     x=self.waypoints[:, 1],
-            #     y=self.waypoints[:, 0],
-            #     z=-self.waypoints[:, 2],
-            #     mode='markers',
-            #     marker=dict(color='black', size=1, opacity=.1)
-            # ))
 
             # == plot waypoint section
             xrot = self.waypoints[:, 0] * np.cos(ROTATED_ANGLE) - self.waypoints[:, 1] * np.sin(ROTATED_ANGLE)
             yrot = self.waypoints[:, 0] * np.sin(ROTATED_ANGLE) + self.waypoints[:, 1] * np.cos(ROTATED_ANGLE)
             zrot = -self.waypoints[:, 2]
-            # fig.add_trace(go.Scatter3d(
-            #     x=yrot,
-            #     y=xrot,
-            #     z=zrot,
-            #     mode='markers',
-            #     marker=dict(color='black', size=2, opacity=.1)
-            # ))
+            fig.add_trace(go.Scatter3d(
+                x=yrot,
+                y=xrot,
+                z=zrot,
+                mode='markers',
+                marker=dict(color='black', size=1, opacity=.1)
+            ))
             fig.add_trace(go.Scatter3d(
                 x=[yrot[ind_previous_waypoint]],
                 y=[xrot[ind_previous_waypoint]],
@@ -236,17 +237,13 @@ class Simulator:
             print("previous ind: ", ind_previous_waypoint)
             print("current ind: ", ind_current_waypoint)
 
-            # os.system('say finished')
-            if i == 50:
-                plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
-                break
-            # break
-        pass
+            if i == NUM_STEPS-1:
+                plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
+
 
 if __name__ == "__main__":
     s = Simulator()
     s.run()
-
 
 
 

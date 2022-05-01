@@ -21,3 +21,36 @@ df = pd.DataFrame(GMRFGrid, columns=['x', 'y', 'z'])
 df.to_csv(FILEPATH+"Simulation/Config/GMRFGrid.csv", index=False)
 print("GMRF grid is generated successfully!")
 
+
+#%% check prior data
+
+import plotly.graph_objects as go
+import numpy as np
+
+mu = pd.read_csv(FILEPATH+"Simulation/Config/Data/data_mu_truth.csv")['salinity'].to_numpy()
+
+#%%
+# Helix equation
+value = mu
+
+fig = go.Figure(data=[go.Scatter3d(
+    x=y,
+    y=x,
+    z=-z,
+    mode='markers',
+    marker=dict(
+        size=12,
+        color=value,                # set color to an array/list of desired values
+        colorscale='BrBG',   # choose a colorscale
+        # opacity=0.8,
+        cmin=16,
+        cmax=32
+    )
+)])
+
+# tight layout
+fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+import plotly
+plotly.offline.plot(fig, filename=FILEPATH+"/fig/data.html", auto_open=True)
+
+
