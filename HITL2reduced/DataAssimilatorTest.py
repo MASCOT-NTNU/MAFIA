@@ -26,14 +26,14 @@ Z_START = DEPTH_START
 class MAFIA2Launcher:
 
     def __init__(self):
-        # self.load_waypoint()
-        # self.load_gmrf_grid()
-        # self.load_gmrf_model()
-        # self.load_prior()
-        # self.update_knowledge()
-        # self.load_hash_neighbours()
-        # self.load_hash_waypoint2gmrf()
-        # self.initialise_function_calls()
+        self.load_waypoint()
+        self.load_gmrf_grid()
+        self.load_gmrf_model()
+        self.load_prior()
+        self.update_knowledge()
+        self.load_hash_neighbours()
+        self.load_hash_waypoint2gmrf()
+        self.initialise_function_calls()
         self.setup_AUV()
         self.update_time = rospy.get_time()
         print("S1-S9 complete!")
