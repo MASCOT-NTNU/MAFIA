@@ -44,6 +44,7 @@ class MAFIA2Launcher:
 
     def load_gmrf_grid(self):
         self.gmrf_grid = pd.read_csv(FILEPATH + "Config/GMRFGrid.csv").to_numpy()
+        self.N_gmrf_grid = len(self.gmrf_grid)
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
@@ -95,7 +96,7 @@ class MAFIA2Launcher:
         t_start = time.time()
         while not rospy.is_shutdown():
             if self.auv.init:
-                print("Waypoint step: ", self.counter_waypoint)
+                # print("Waypoint step: ", self.counter_waypoint)
                 t_end = time.time()
 
                 self.auv_data.append([self.auv.vehicle_pos[0],
@@ -201,18 +202,20 @@ class MAFIA2Launcher:
 
     def assimilate_data(self, dataset):
         t1 = time.time()
-        depth_auv = round2base(dataset[:, 2], .5)
-        print("depth_auv", depth_auv)
-        # Obs = dataset[:, :-1].dot(np.ones([3, self.gmrf_grid.shape[0]]))
-        # Grid = np.ones([dataset.shape[0], 3]).dot(self.gmrf_grid.T)
-        # Dist = (Obs - Grid) ** 2
-        # ind = np.argmin(Dist, axis=1)
+        dx = (vectorise(dataset[:, 0]) @ np.ones([1, self.N_gmrf_grid]) -
+              np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 0]).T) ** 2
+        dy = (vectorise(dataset[:, 1]) @ np.ones([1, self.N_gmrf_grid]) -
+              np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 1]).T) ** 2
+        dz = ((vectorise(dataset[:, 2]) @ np.ones([1, self.N_gmrf_grid]) -
+              np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 2]).T) * GMRF_DISTANCE_NEIGHBOUR) ** 2
+        dist = dx + dy + dz
+        ind = np.argmin(dist, axis=1)
         t2 = time.time()
-        # print("ind: ", ind)
-        # ind_unique = np.unique(ind)
-        # print("ind unique: ", ind_unique)
-        # print("Before filtering: ", len(ind))
-        # print("After filetering: ", len(ind_unique))
+        print("ind: ", ind)
+        ind_unique = np.unique(ind)
+        print("ind unique: ", ind_unique)
+        print("Before filtering: ", len(ind))
+        print("After filetering: ", len(ind_unique))
         print("Data assimilation takes: ", t2 - t1)
 
 

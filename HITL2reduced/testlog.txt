@@ -10,33 +10,32 @@ S9: AUV is setup successfully!
 S1-S9 complete!
 Set waypoint successfully!
 Waypoint step:  0
-[INFO] [1651504398.546368]: dispatching entitylist query 
-[INFO] [1651504398.549592]: dispatching entitylist query 
+[INFO] [1651505671.143507]: dispatching entitylist query 
+[INFO] [1651505671.146955]: dispatching entitylist query 
 Waypoint step:  0
 Waypoint step:  0
 Waypoint step:  0
 Waypoint step:  0
-Arrived the current location
-depth_auv [ 0. -0. -0. -0. -0.]
-Data assimilation takes:  0.0004642009735107422
-Update consumed:  2.384185791015625e-07
-previous ind:  0
-current ind:  1
-next ind:  2
-pioneer ind:  2
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
-Waypoint step:  1
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
