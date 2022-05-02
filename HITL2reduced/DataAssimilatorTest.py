@@ -82,10 +82,11 @@ class MAFIA2Launcher:
         self.counter_waypoint = 0
         self.salinity = []
 
-        ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
+        # ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
+        ind_current_waypoint = 0
         ind_previous_waypoint = ind_current_waypoint
-        ind_pioneer_waypoint = ind_current_waypoint
-        ind_next_waypoint = ind_current_waypoint
+        ind_pioneer_waypoint = ind_current_waypoint + 1
+        ind_next_waypoint = ind_pioneer_waypoint
         ind_visited_waypoint = []
         ind_visited_waypoint.append(ind_current_waypoint)
 
@@ -96,6 +97,7 @@ class MAFIA2Launcher:
             if self.auv.init:
                 print("Waypoint step: ", self.counter_waypoint)
                 t_end = time.time()
+
 
                 self.salinity.append(self.auv.currentSalinity)
 
@@ -125,32 +127,33 @@ class MAFIA2Launcher:
                     self.knowledge.mu = self.gmrf_model.mu
                     self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
-                    if self.counter_waypoint == 0:
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=ind_current_waypoint,
-                                                            ind_previous=ind_previous_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=ind_visited_waypoint)
-                        ind_next_waypoint = self.pathplanner.ind_next
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=ind_next_waypoint,
-                                                            ind_previous=ind_current_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=ind_visited_waypoint)
-                        ind_pioneer_waypoint = self.pathplanner.ind_next
-                    else:
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=ind_next_waypoint,
-                                                            ind_previous=ind_current_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=ind_visited_waypoint)
-                        ind_pioneer_waypoint = self.pathplanner.ind_next
+                    # if self.counter_waypoint == 0:
+                    #     self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                    #                                         gmrf_model=self.gmrf_model,
+                    #                                         ind_current=ind_current_waypoint,
+                    #                                         ind_previous=ind_previous_waypoint,
+                    #                                         hash_neighbours=self.hash_neighbours,
+                    #                                         hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                    #                                         ind_visited=ind_visited_waypoint)
+                    #     ind_next_waypoint = self.pathplanner.ind_next
+                    #     self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                    #                                         gmrf_model=self.gmrf_model,
+                    #                                         ind_current=ind_next_waypoint,
+                    #                                         ind_previous=ind_current_waypoint,
+                    #                                         hash_neighbours=self.hash_neighbours,
+                    #                                         hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                    #                                         ind_visited=ind_visited_waypoint)
+                    #     ind_pioneer_waypoint = self.pathplanner.ind_next
+                    # else:
+                    #     self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                    #                                         gmrf_model=self.gmrf_model,
+                    #                                         ind_current=ind_next_waypoint,
+                    #                                         ind_previous=ind_current_waypoint,
+                    #                                         hash_neighbours=self.hash_neighbours,
+                    #                                         hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                    #                                         ind_visited=ind_visited_waypoint)
+                    #     ind_pioneer_waypoint = self.pathplanner.ind_next
+                    ind_pioneer_waypoint += 1
                     self.counter_waypoint += 1
 
                     ind_previous_waypoint = ind_current_waypoint
