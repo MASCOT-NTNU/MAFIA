@@ -6,8 +6,8 @@ Date: 2022-04-23
 """
 
 from usr_func import *
+from Config.AdaframeConfig import * # !!!! ROSPY important
 from Config.Config import *
-from Config.AdaframeConfig import *
 from PlanningStrategies.Myopic3D import MyopicPlanning3D
 from Knowledge.Knowledge import Knowledge
 from AUV import AUV

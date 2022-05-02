@@ -5,25 +5,30 @@ from MAFIA.Simulation.Config.Config import FILEPATH
 
 
 class spde:
-    def __init__(self, model = 6):
+    def __init__(self, model = 6, reduce = False):
         self.M = 45
         self.N = 45
         self.P = 11
         self.n = self.M*self.N*self.P
         self.define(model=model)
+        if reduce:
+                self.reduce()
+
     
-    def reduce(self,x,y,z):
-        tx,ty,tz = np.meshgrid(np.arange(x[0],x[1]),np.arange(y[0],y[1]),np.arange(z[0],z[1]))
+    def reduce(self):
+        tx,ty,tz = np.meshgrid(np.arange(45),np.arange(45),np.arange(7))
         tx = tx.flatten()
         ty = ty.flatten()
         tz = tz.flatten()
         ks = ty*self.M*self.P + tx*self.P + tz
         self.Q = self.Q[ks,:][:,ks]
         self.Q_fac = cholesky(self.Q)
-        self.M = x[1]-x[0]
-        self.N = y[1]-y[0]
-        self.P = z[1]-z[0]
+        self.M = 45
+        self.N = 45
+        self.P = 7
         self.n = self.M*self.N*self.P
+        self.mu = np.load(FILEPATH + 'models/prior_small.npy')
+
 
     # fix par for models
     def define(self, model = 2):
@@ -73,41 +78,6 @@ class spde:
         c = F @ self.mu - rel
         self.mu = self.mu - U.transpose() * c
         self.Q_fac = cholesky(self.Q)
-
-
-        # def update(self,rel,ks):
-    #     print("ks: ", ks)
-    #     mu = self.mu.reshape(-1,1)
-    #
-    #
-    #     self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2
-    #
-    #     F = np.zeros([len(ks),self.M*self.N*self.P])
-    #     for i in range(len(ks)):
-    #         F[i, ks[i]] = True
-    #
-    #
-    #
-    #     V = self.Q_fac.solve_A(F.transpose())
-    #     W = F@V + self.sigma[0]**2 + self.sigma[1]**2
-    #     # np.linalg.solve(W, V.T)
-    #     U = (V/W).reshape(1, -1)
-    #     print("F: ", F.shape)
-    #     print("mu: ", mu.shape)
-    #     print("rel: ", rel.shape)
-    #
-    #     print("U: ", U.shape)
-    #
-    #     c = F.T@mu - rel
-    #     print('c: ', c.shape)
-    #     # print("U: ", U.transpose()@c)
-    #     print("U*C", (U.T@c).shape)
-    #
-    #
-    #     mu = mu - (U.T@c).flatten()
-    #     self.mu = mu.flatten()
-    #     print("mucond: ", self.mu.shape)
-        # self.Q_fac = cholesky(self.Q)
 
     def mvar(self,Q_fac = None, n=40):
         if Q_fac is None: 
