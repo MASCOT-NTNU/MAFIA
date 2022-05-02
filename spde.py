@@ -5,7 +5,7 @@ from MAFIA.Simulation.Config.Config import FILEPATH
 
 
 class spde:
-    def __init__(self, model = 6, reduce = False):
+    def __init__(self, model = 2, reduce = False):
         self.M = 45
         self.N = 45
         self.P = 11
@@ -65,27 +65,32 @@ class spde:
     def candidate(self,ks,n=40):
         Q = self.Q.copy()
         Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2 
-        Q_fac = cholesky(Q)
+        Q_fac = self.Q_fac
+        Q_fac.cholesky_inplace(Q)
         return(self.mvar(Q_fac = Q_fac,n=n))
 
     def update(self, rel, ks):
-        self.Q[ks, ks] = self.Q[ks, ks] + 1 / self.sigma[0] ** 2
-        F = np.zeros(self.M * self.N * self.P)
-        F[ks] = 1
-        V = self.Q_fac.solve_A(F.transpose())
-        W = F @ V + self.sigma[0] ** 2 + self.sigma[1] ** 2
-        U = V / W
-        c = F @ self.mu - rel
-        self.mu = self.mu - U.transpose() * c
-        self.Q_fac = cholesky(self.Q)
+        mu = self.mu.reshape(-1,1)
+        S = self.Stot[ks,:]
+        self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2
+        self.Q_fac.cholesky_inplace(self.Q)
+        mu = mu - self.Q_fac.solve_A(S.transpose()@(S@mu-rel)*1/self.sigma[0]**2)
+        self.mu = mu.flatten()
+        #self.Q[ks, ks] = self.Q[ks, ks] + 1 / self.sigma[0] ** 2
+        #F = np.zeros(self.M * self.N * self.P)
+        #F[ks] = 1
+        #V = self.Q_fac.solve_A(F.transpose())
+        #W = F @ V + self.sigma[0] ** 2 + self.sigma[1] ** 2
+        #U = V / W
+        #c = F @ self.mu - rel
+        #self.mu = self.mu - U.transpose() * c
+        #self.Q_fac = cholesky(self.Q)
+
+    
 
     def mvar(self,Q_fac = None, n=40):
-        if Q_fac is None: 
-            Q_fac = self.Q_fac
-        data = np.zeros((self.n,n))
-        for i in range(n):
-            z = np.random.normal(size = self.n)
-            data[:,i] = Q_fac.apply_Pt(Q_fac.solve_Lt(z,use_LDLt_decomposition=False)) 
+        z = np.random.normal(size = self.n*n).reshape(self.n,n)
+        data = self.Q_fac.apply_Pt(self.Q_fac.solve_Lt(z,use_LDLt_decomposition=False)) 
         return(data.var(axis = 1))
 
 
