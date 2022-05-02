@@ -273,7 +273,7 @@ class Simulator:
             if i == NUM_STEPS-1:
                 plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
             # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
-            # break
+            break
 
 
 if __name__ == "__main__":
