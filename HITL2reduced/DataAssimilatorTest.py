@@ -119,13 +119,15 @@ class MAFIA2Launcher:
                 if self.auv.auv_handler.getState() == "waiting" and rospy.get_time() -self.update_time > WAYPOINT_UPDATE_TIME:
                     print("Arrived the current location")
                     ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
-                    self.auv_data = []
-                    ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
+                    # ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
                     # self.salinity_measured = np.mean(self.salinity[-10:])
                     # print("Sampled salinity: ", self.salinity_measured)
 
                     t1 = time.time()
-                    self.gmrf_model.update(rel=salinity_assimilated, ks=ind_assimilated)
+                    print("Salinity assimilated: ", salinity_assimilated.shape)
+                    print("Ind assimilated: ", ind_assimilated.shape)
+                    
+                    self.gmrf_model.update(rel=vectorise(salinity_assimilated), ks=ind_assimilated)
                     t2 = time.time()
                     print("Update consumed: ", t2 - t1)
 
@@ -219,6 +221,7 @@ class MAFIA2Launcher:
         print("Ind assimilated: ", ind_assimilated)
         print("Salinity assimilated: ", salinity_assimilated)
         print("Data assimilation takes: ", t2 - t1)
+        self.auv_data = []
         return ind_assimilated, salinity_assimilated
 
 
