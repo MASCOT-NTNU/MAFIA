@@ -90,6 +90,7 @@ class MAFIA2Launcher:
 
         self.set_waypoint_using_ind_waypoint(ind_current_waypoint)
 
+        print("Start 2-step planning")
         self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
                                             gmrf_model=self.gmrf_model,
                                             ind_current=ind_current_waypoint,
@@ -106,6 +107,7 @@ class MAFIA2Launcher:
                                             hash_waypoint2gmrf=self.hash_waypoint2gmrf,
                                             ind_visited=ind_visited_waypoint)
         ind_pioneer_waypoint = self.pathplanner.ind_next
+        print("Finished 2-step planning!!!")
 
         t_start = time.time()
         while not rospy.is_shutdown():
@@ -117,10 +119,10 @@ class MAFIA2Launcher:
                                       self.auv.vehicle_pos[1],
                                       self.auv.vehicle_pos[2],
                                       self.auv.currentSalinity])
-                # print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
-                #       self.auv.vehicle_pos[2], self.auv.currentSalinity)
+                print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
+                      self.auv.vehicle_pos[2], self.auv.currentSalinity)
                 self.auv.current_state = self.auv.auv_handler.getState()
-                # print("AUV state: ", self.auv.current_state)
+                print("AUV state: ", self.auv.current_state)
 
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
@@ -135,6 +137,7 @@ class MAFIA2Launcher:
 
                     ind_previous_waypoint = ind_current_waypoint
                     ind_current_waypoint = ind_next_waypoint
+                    ind_next_waypoint = ind_pioneer_waypoint
                     ind_visited_waypoint.append(ind_current_waypoint)
 
                     x_waypoint = self.waypoints[ind_current_waypoint, 0]
@@ -153,11 +156,10 @@ class MAFIA2Launcher:
                     else:
                         self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint,
                                                          speed=self.auv.speed)
+                        print("Set waypoint successfully!")
                         self.update_time = rospy.get_time()
                         print("previous ind: ", ind_previous_waypoint)
                         print("current ind: ", ind_current_waypoint)
-                        print("next ind: ", ind_next_waypoint)
-                        print("pioneer ind: ", ind_pioneer_waypoint)
 
                     ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
                     print("Path mean salinity: ", np.mean(salinity_assimilated))
@@ -180,8 +182,6 @@ class MAFIA2Launcher:
                                                         ind_visited=ind_visited_waypoint)
                     ind_pioneer_waypoint = self.pathplanner.ind_next
                     self.counter_waypoint += 1
-
-                    ind_next_waypoint = ind_pioneer_waypoint
 
                 self.auv.last_state = self.auv.auv_handler.getState()
                 self.auv.auv_handler.spin()

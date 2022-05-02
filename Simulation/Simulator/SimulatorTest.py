@@ -4,6 +4,7 @@ Author: Yaolin Ge
 Contact: yaolin.ge@ntnu.no
 Date: 2022-04-23
 """
+import time
 
 from usr_func import *
 from MAFIA.Simulation.Config.Config import *
@@ -279,6 +280,9 @@ class Simulator:
 if __name__ == "__main__":
     s = Simulator()
     s.run()
+
+#%%
+
 
 
 
