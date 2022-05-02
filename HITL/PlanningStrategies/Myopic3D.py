@@ -81,7 +81,6 @@ class MyopicPlanning3D:
         t1 = time.time()
         for ind_candidate in self.ind_candidates:
             self.EIBV.append(self.get_eibv_from_gmrf_model(self.hash_waypoint2gmrf[ind_candidate]))
-            break #TODO: DEBUG, needs to be removed
         if self.EIBV:
             self.ind_next = self.ind_candidates[np.argmin(self.EIBV)]
         else:
