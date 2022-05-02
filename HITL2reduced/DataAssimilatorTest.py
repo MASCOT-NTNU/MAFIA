@@ -118,14 +118,14 @@ class MAFIA2Launcher:
 
                 if self.auv.auv_handler.getState() == "waiting" and rospy.get_time() -self.update_time > WAYPOINT_UPDATE_TIME:
                     print("Arrived the current location")
-                    self.assimilate_data(np.array(self.auv_data))
-
+                    ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
+                    self.auv_data = []
                     ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
                     # self.salinity_measured = np.mean(self.salinity[-10:])
                     # print("Sampled salinity: ", self.salinity_measured)
 
                     t1 = time.time()
-                    # self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
+                    self.gmrf_model.update(rel=salinity_assimilated, ks=ind_assimilated)
                     t2 = time.time()
                     print("Update consumed: ", t2 - t1)
 
@@ -209,14 +209,17 @@ class MAFIA2Launcher:
         dz = ((vectorise(dataset[:, 2]) @ np.ones([1, self.N_gmrf_grid]) -
               np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 2]).T) * GMRF_DISTANCE_NEIGHBOUR) ** 2
         dist = dx + dy + dz
-        ind = np.argmin(dist, axis=1)
+        ind_min_distance = np.argmin(dist, axis=1)
         t2 = time.time()
-        print("ind: ", ind)
-        ind_unique = np.unique(ind)
-        print("ind unique: ", ind_unique)
-        print("Before filtering: ", len(ind))
-        print("After filetering: ", len(ind_unique))
+        ind_assimilated = np.unique(ind_min_distance)
+        salinity_assimilated = np.zeros(len(ind_assimilated))
+        for i in range(len(ind_assimilated)):
+            ind_selected = np.where(ind_min_distance == ind_assimilated[i])[0]
+            salinity_assimilated[i] = np.mean(dataset[ind_selected, 3])
+        print("Ind assimilated: ", ind_assimilated)
+        print("Salinity assimilated: ", salinity_assimilated)
         print("Data assimilation takes: ", t2 - t1)
+        return ind_assimilated, salinity_assimilated
 
 
 if __name__ == "__main__":
