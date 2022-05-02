@@ -1,0 +1,581 @@
+S1: Waypoint is loaded successfully!
+S2: GMRF grid is loaded successfully!
+S3: GMRF model is loaded successfully!
+S4: Prior is loaded successfully!
+S5: Knowledge of the field is set up successfully!
+S6: Neighbour hash table is loaded successfully!
+S7: Waypoint2GMRF hash table is loaded successfully!
+S8: Function calls are initialised successfully!
+S9: AUV is setup successfully!
+S1-S9 complete!
+Set waypoint successfully!
+Waypoint step:  0
+[INFO] [1651499205.300606]: dispatching entitylist query 
+[INFO] [1651499205.302896]: dispatching entitylist query 
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Waypoint step:  0
+Arrived the current location
+ind:  [ 7888  1279   645  1279   645  1279   645  1279  1279   645  1279  8216
+  7899  8216  7898   960   959  8212  8846  1274  1590  2224  8526  9476
+  2539  9158  9474  9790  2219  2852  9471  2851  9787  9786  2849  3799
+ 10736 11052  3797  3480  4113  4430 11366  4111 10731 11364 11681 11997
+ 11362 11996  4742  4424 11994  5374  5690 12627 11992  5372  5688  5371
+  6004 12624  5369 12939  6002 12938  6318 12937  6000 13570  6316 13887
+  6632  7265  6314 13567  6630  7263  6629  7579     8  7578     7   958
+   323  7259   957  7575   638  7892   637  8208  1588   953  1269  1269
+  1586  8205  1585  1901  1584  8520  1583  1899  1582  8835  2532  1897
+  9785  9467  9784  3163  2846  3162 10099  3161  2527  3160  9780 10097
+  3476 10730  3475 10729  3474 10728  3473 10727 11044  3789  4106  3788
+  4105  3787  4104  4737  4103  4736 11990  4735 11355  4734  5051  5368
+ 11987  5367 11669  5049 12619  5048 12618 12935 12617 12300 12616 12299]
+ind unique:  [    7     8   323   637   638   645   953   957   958   959   960  1269
+  1274  1279  1582  1583  1584  1585  1586  1588  1590  1897  1899  1901
+  2219  2224  2527  2532  2539  2846  2849  2851  2852  3160  3161  3162
+  3163  3473  3474  3475  3476  3480  3787  3788  3789  3797  3799  4103
+  4104  4105  4106  4111  4113  4424  4430  4734  4735  4736  4737  4742
+  5048  5049  5051  5367  5368  5369  5371  5372  5374  5688  5690  6000
+  6002  6004  6314  6316  6318  6629  6630  6632  7259  7263  7265  7575
+  7578  7579  7888  7892  7898  7899  8205  8208  8212  8216  8520  8526
+  8835  8846  9158  9467  9471  9474  9476  9780  9784  9785  9786  9787
+  9790 10097 10099 10727 10728 10729 10730 10731 10736 11044 11052 11355
+ 11362 11364 11366 11669 11681 11987 11990 11992 11994 11996 11997 12299
+ 12300 12616 12617 12618 12619 12624 12627 12935 12937 12938 12939 13567
+ 13570 13887]
+Before filtering:  156
+After filetering:  146
+Data assimilation takes:  0.03286862373352051
+Update consumed:  2.384185791015625e-07
+previous ind:  0
+current ind:  1
+next ind:  2
+pioneer ind:  2
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Waypoint step:  1
+Arrived the current location
+ind:  [ 7888  1279   645  1279   645  1279   645  1279  1279   645  1279  8216
+  7899  8216  7898   960   959  8212  8846  1274  1590  2224  8526  9476
+  2539  9158  9474  9790  2219  2852  9471  2851  9787  9786  2849  3799
+ 10736 11052  3797  3480  4113  4430 11366  4111 10731 11364 11681 11997
+ 11362 11996  4742  4424 11994  5374  5690 12627 11992  5372  5688  5371
+  6004 12624  5369 12939  6002 12938  6318 12937  6000 13570  6316 13887
+  6632  7265  6314 13567  6630  7263  6629  7579     8  7578     7   958
+   323  7259   957  7575   638  7892   637  8208  1588   953  1269  1269
+  1586  8205  1585  1901  1584  8520  1583  1899  1582  8835  2532  1897
+  9785  9467  9784  3163  2846  3162 10099  3161  2527  3160  9780 10097
+  3476 10730  3475 10729  3474 10728  3473 10727 11044  3789  4106  3788
+  4105  3787  4104  4737  4103  4736 11990  4735 11355  4734  5051  5368
+ 11987  5367 11669  5049 12619  5048 12618 12935 12617 12300 12616 12299
+ 12933  6313 12933  5678  6311 13246 13245 13878  7257  6938  7255  7255
+  7573     2 13560 13561 13244 13879  6308  6308  6308  6942 13562 13244
+  6307 13878  7258  6940   320  6622   319  7573  6938  7255  6937  7254
+  7887  7253   950   632  7569   631  7568  8518  1581  8517  1580   946
+  8199  1896  8198  1895  8831  1894  9148  1576  8512  1575  9146  2208
+  9145  1890  9144  2206  9460  2839  9459  2838  9458  2837  9457  3471
+ 10407  9773 10089  9772 10088  3785 10087  4101 11038 10403 11037 10402
+ 11036  4098 11035 10718  4097 10717  4096 11350  4095 11983 11665  5046
+ 11664  5045  5361  4726  5360  5043  5676 11978 11978 12612  5991]
+ind unique:  [    2     7     8   319   320   323   631   632   637   638   645   946
+   950   953   957   958   959   960  1269  1274  1279  1575  1576  1580
+  1581  1582  1583  1584  1585  1586  1588  1590  1890  1894  1895  1896
+  1897  1899  1901  2206  2208  2219  2224  2527  2532  2539  2837  2838
+  2839  2846  2849  2851  2852  3160  3161  3162  3163  3471  3473  3474
+  3475  3476  3480  3785  3787  3788  3789  3797  3799  4095  4096  4097
+  4098  4101  4103  4104  4105  4106  4111  4113  4424  4430  4726  4734
+  4735  4736  4737  4742  5043  5045  5046  5048  5049  5051  5360  5361
+  5367  5368  5369  5371  5372  5374  5676  5678  5688  5690  5991  6000
+  6002  6004  6307  6308  6311  6313  6314  6316  6318  6622  6629  6630
+  6632  6937  6938  6940  6942  7253  7254  7255  7257  7258  7259  7263
+  7265  7568  7569  7573  7575  7578  7579  7887  7888  7892  7898  7899
+  8198  8199  8205  8208  8212  8216  8512  8517  8518  8520  8526  8831
+  8835  8846  9144  9145  9146  9148  9158  9457  9458  9459  9460  9467
+  9471  9474  9476  9772  9773  9780  9784  9785  9786  9787  9790 10087
+ 10088 10089 10097 10099 10402 10403 10407 10717 10718 10727 10728 10729
+ 10730 10731 10736 11035 11036 11037 11038 11044 11052 11350 11355 11362
+ 11364 11366 11664 11665 11669 11681 11978 11983 11987 11990 11992 11994
+ 11996 11997 12299 12300 12612 12616 12617 12618 12619 12624 12627 12933
+ 12935 12937 12938 12939 13244 13245 13246 13560 13561 13562 13567 13570
+ 13878 13879 13887]
+Before filtering:  263
+After filetering:  243
+Data assimilation takes:  0.04922842979431152
+Update consumed:  7.152557373046875e-07
+previous ind:  1
+current ind:  2
+next ind:  3
+pioneer ind:  3
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Waypoint step:  2
+Arrived the current location
+ind:  [ 7888  1279   645  1279   645  1279   645  1279  1279   645  1279  8216
+  7899  8216  7898   960   959  8212  8846  1274  1590  2224  8526  9476
+  2539  9158  9474  9790  2219  2852  9471  2851  9787  9786  2849  3799
+ 10736 11052  3797  3480  4113  4430 11366  4111 10731 11364 11681 11997
+ 11362 11996  4742  4424 11994  5374  5690 12627 11992  5372  5688  5371
+  6004 12624  5369 12939  6002 12938  6318 12937  6000 13570  6316 13887
+  6632  7265  6314 13567  6630  7263  6629  7579     8  7578     7   958
+   323  7259   957  7575   638  7892   637  8208  1588   953  1269  1269
+  1586  8205  1585  1901  1584  8520  1583  1899  1582  8835  2532  1897
+  9785  9467  9784  3163  2846  3162 10099  3161  2527  3160  9780 10097
+  3476 10730  3475 10729  3474 10728  3473 10727 11044  3789  4106  3788
+  4105  3787  4104  4737  4103  4736 11990  4735 11355  4734  5051  5368
+ 11987  5367 11669  5049 12619  5048 12618 12935 12617 12300 12616 12299
+ 12933  6313 12933  5678  6311 13246 13245 13878  7257  6938  7255  7255
+  7573     2 13560 13561 13244 13879  6308  6308  6308  6942 13562 13244
+  6307 13878  7258  6940   320  6622   319  7573  6938  7255  6937  7254
+  7887  7253   950   632  7569   631  7568  8518  1581  8517  1580   946
+  8199  1896  8198  1895  8831  1894  9148  1576  8512  1575  9146  2208
+  9145  1890  9144  2206  9460  2839  9459  2838  9458  2837  9457  3471
+ 10407  9773 10089  9772 10088  3785 10087  4101 11038 10403 11037 10402
+ 11036  4098 11035 10718  4097 10717  4096 11350  4095 11983 11665  5046
+ 11664  5045  5361  4726  5360  5043  5676 11978 11978 12612  5991  5357
+  5356  5355  5988  5355  5356  5040  5675  5360 11664 11983  4095 11033
+  4731 11035  4099  3783 10404  9772 10090  3155  9777  2524  2525  1893
+  8514  8516  8201  7569  7887   635   320  7258  6308 12930 12614 12299
+  5047  5366  5367 11671  5053  4104  3788  3790 10729 10413  2843  2528
+  9784  9151  1899  2218  1586  1588  7892   956   323     8  7263  6314
+  6633 12937  6002  5370 12625 11992  5057 11679 11046 11365 10416 10735
+  3798  2849  2534  9789  9157  9159  2224  8211  1276  1277  7898  7266
+   331   650    17 13893  6006  6325  5692 12948 11999 12634 12319 12004
+ 11371 11372 10739 10741 10109 10428  2859  9797]
+ind unique:  [    2     7     8    17   319   320   323   331   631   632   635   637
+   638   645   650   946   950   953   956   957   958   959   960  1269
+  1274  1276  1277  1279  1575  1576  1580  1581  1582  1583  1584  1585
+  1586  1588  1590  1890  1893  1894  1895  1896  1897  1899  1901  2206
+  2208  2218  2219  2224  2524  2525  2527  2528  2532  2534  2539  2837
+  2838  2839  2843  2846  2849  2851  2852  2859  3155  3160  3161  3162
+  3163  3471  3473  3474  3475  3476  3480  3783  3785  3787  3788  3789
+  3790  3797  3798  3799  4095  4096  4097  4098  4099  4101  4103  4104
+  4105  4106  4111  4113  4424  4430  4726  4731  4734  4735  4736  4737
+  4742  5040  5043  5045  5046  5047  5048  5049  5051  5053  5057  5355
+  5356  5357  5360  5361  5366  5367  5368  5369  5370  5371  5372  5374
+  5675  5676  5678  5688  5690  5692  5988  5991  6000  6002  6004  6006
+  6307  6308  6311  6313  6314  6316  6318  6325  6622  6629  6630  6632
+  6633  6937  6938  6940  6942  7253  7254  7255  7257  7258  7259  7263
+  7265  7266  7568  7569  7573  7575  7578  7579  7887  7888  7892  7898
+  7899  8198  8199  8201  8205  8208  8211  8212  8216  8512  8514  8516
+  8517  8518  8520  8526  8831  8835  8846  9144  9145  9146  9148  9151
+  9157  9158  9159  9457  9458  9459  9460  9467  9471  9474  9476  9772
+  9773  9777  9780  9784  9785  9786  9787  9789  9790  9797 10087 10088
+ 10089 10090 10097 10099 10109 10402 10403 10404 10407 10413 10416 10428
+ 10717 10718 10727 10728 10729 10730 10731 10735 10736 10739 10741 11033
+ 11035 11036 11037 11038 11044 11046 11052 11350 11355 11362 11364 11365
+ 11366 11371 11372 11664 11665 11669 11671 11679 11681 11978 11983 11987
+ 11990 11992 11994 11996 11997 11999 12004 12299 12300 12319 12612 12614
+ 12616 12617 12618 12619 12624 12625 12627 12634 12930 12933 12935 12937
+ 12938 12939 12948 13244 13245 13246 13560 13561 13562 13567 13570 13878
+ 13879 13887 13893]
+Before filtering:  368
+After filetering:  315
+Data assimilation takes:  0.0704963207244873
+Update consumed:  9.5367431640625e-07
+previous ind:  2
+current ind:  3
+next ind:  4
+pioneer ind:  4
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3
+Waypoint step:  3

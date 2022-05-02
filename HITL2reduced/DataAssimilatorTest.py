@@ -209,13 +209,11 @@ class MAFIA2Launcher:
         print("ind: ", ind)
         ind_unique = np.unique(ind)
         print("ind unique: ", ind_unique)
+        print("Before filtering: ", len(ind))
+        print("After filetering: ", len(ind_unique))
         print("Data assimilation takes: ", t2 - t1)
 
 
 if __name__ == "__main__":
     s = MAFIA2Launcher()
     s.run()
-
-
-
-
