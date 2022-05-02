@@ -80,8 +80,7 @@ class MAFIA2Launcher:
 
     def run(self):
         self.counter_waypoint = 0
-        self.salinity = []
-        self.auv_location = []
+        self.auv_data = []
 
         # ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         ind_current_waypoint = 0
@@ -99,14 +98,14 @@ class MAFIA2Launcher:
                 print("Waypoint step: ", self.counter_waypoint)
                 t_end = time.time()
 
-                self.salinity.append(self.auv.currentSalinity)
-                self.auv_location.append([self.auv.vehicle_pos[0],
-                                          self.auv.vehicle_pos[1],
-                                          self.auv.vehicle_pos[2]])
-                print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
-                      self.auv.vehicle_pos[2], self.auv.currentSalinity)
+                self.auv_data.append([self.auv.vehicle_pos[0],
+                                      self.auv.vehicle_pos[1],
+                                      self.auv.vehicle_pos[2],
+                                      self.auv.currentSalinity])
+                # print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
+                #       self.auv.vehicle_pos[2], self.auv.currentSalinity)
                 self.auv.current_state = self.auv.auv_handler.getState()
-                print("AUV state: ", self.auv.current_state)
+                # print("AUV state: ", self.auv.current_state)
 
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
@@ -118,6 +117,7 @@ class MAFIA2Launcher:
 
                 if self.auv.auv_handler.getState() == "waiting" and rospy.get_time() -self.update_time > WAYPOINT_UPDATE_TIME:
                     print("Arrived the current location")
+                    self.assimilate_data(np.array(self.auv_data))
 
                     ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
                     self.salinity_measured = np.mean(self.salinity[-10:])
@@ -198,6 +198,16 @@ class MAFIA2Launcher:
         lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
         self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint, speed=self.auv.speed)
         print("Set waypoint successfully!")
+
+    def assimilate_data(self, dataset):
+        t1 = time.time()
+        Obs = dataset[:, :-1].dot(np.ones([3, self.gmrf_grid.shape[0]]))
+        Grid = np.ones([dataset.shape[0], 3]).dot(self.gmrf_grid.T)
+        Dist = (Obs - Grid) ** 2
+        ind = np.amin(Dist, axis=1)
+        t2 = time.time()
+        print("ind: ", ind)
+        print("Data assimilation takes: ", t2 - t1)
 
 
 if __name__ == "__main__":
