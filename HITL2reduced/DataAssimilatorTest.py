@@ -120,11 +120,11 @@ class MAFIA2Launcher:
                     self.assimilate_data(np.array(self.auv_data))
 
                     ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
-                    self.salinity_measured = np.mean(self.salinity[-10:])
-                    print("Sampled salinity: ", self.salinity_measured)
+                    # self.salinity_measured = np.mean(self.salinity[-10:])
+                    # print("Sampled salinity: ", self.salinity_measured)
 
                     t1 = time.time()
-                    self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
+                    # self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
                     t2 = time.time()
                     print("Update consumed: ", t2 - t1)
 
@@ -204,9 +204,11 @@ class MAFIA2Launcher:
         Obs = dataset[:, :-1].dot(np.ones([3, self.gmrf_grid.shape[0]]))
         Grid = np.ones([dataset.shape[0], 3]).dot(self.gmrf_grid.T)
         Dist = (Obs - Grid) ** 2
-        ind = np.amin(Dist, axis=1)
+        ind = np.argmin(Dist, axis=1)
         t2 = time.time()
         print("ind: ", ind)
+        ind_unique = np.unique(ind)
+        print("ind unique: ", ind_unique)
         print("Data assimilation takes: ", t2 - t1)
 
 
