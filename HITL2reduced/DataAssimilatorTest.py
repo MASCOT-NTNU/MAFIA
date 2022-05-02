@@ -201,16 +201,18 @@ class MAFIA2Launcher:
 
     def assimilate_data(self, dataset):
         t1 = time.time()
-        Obs = dataset[:, :-1].dot(np.ones([3, self.gmrf_grid.shape[0]]))
-        Grid = np.ones([dataset.shape[0], 3]).dot(self.gmrf_grid.T)
-        Dist = (Obs - Grid) ** 2
-        ind = np.argmin(Dist, axis=1)
+        depth_auv = round2base(dataset[:, 2], .5)
+        print("depth_auv", depth_auv)
+        # Obs = dataset[:, :-1].dot(np.ones([3, self.gmrf_grid.shape[0]]))
+        # Grid = np.ones([dataset.shape[0], 3]).dot(self.gmrf_grid.T)
+        # Dist = (Obs - Grid) ** 2
+        # ind = np.argmin(Dist, axis=1)
         t2 = time.time()
-        print("ind: ", ind)
-        ind_unique = np.unique(ind)
-        print("ind unique: ", ind_unique)
-        print("Before filtering: ", len(ind))
-        print("After filetering: ", len(ind_unique))
+        # print("ind: ", ind)
+        # ind_unique = np.unique(ind)
+        # print("ind unique: ", ind_unique)
+        # print("Before filtering: ", len(ind))
+        # print("After filetering: ", len(ind_unique))
         print("Data assimilation takes: ", t2 - t1)
 
 
