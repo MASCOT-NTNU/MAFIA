@@ -26,14 +26,14 @@ Z_START = DEPTH_START
 class MAFIA2Launcher:
 
     def __init__(self):
-        self.load_waypoint()
-        self.load_gmrf_grid()
-        self.load_gmrf_model()
-        self.load_prior()
-        self.update_knowledge()
-        self.load_hash_neighbours()
-        self.load_hash_waypoint2gmrf()
-        self.initialise_function_calls()
+        # self.load_waypoint()
+        # self.load_gmrf_grid()
+        # self.load_gmrf_model()
+        # self.load_prior()
+        # self.update_knowledge()
+        # self.load_hash_neighbours()
+        # self.load_hash_waypoint2gmrf()
+        # self.initialise_function_calls()
         self.setup_AUV()
         self.update_time = rospy.get_time()
         print("S1-S9 complete!")
@@ -81,6 +81,7 @@ class MAFIA2Launcher:
     def run(self):
         self.counter_waypoint = 0
         self.salinity = []
+        self.auv_location = []
 
         # ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         ind_current_waypoint = 0
@@ -98,9 +99,12 @@ class MAFIA2Launcher:
                 print("Waypoint step: ", self.counter_waypoint)
                 t_end = time.time()
 
-
                 self.salinity.append(self.auv.currentSalinity)
-
+                self.auv_location.append([self.auv.vehicle_pos[0],
+                                          self.auv.vehicle_pos[1],
+                                          self.auv.vehicle_pos[2]])
+                print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
+                      self.auv.vehicle_pos[2], self.auv.currentSalinity)
                 self.auv.current_state = self.auv.auv_handler.getState()
                 print("AUV state: ", self.auv.current_state)
 
