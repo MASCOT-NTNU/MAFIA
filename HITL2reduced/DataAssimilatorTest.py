@@ -165,8 +165,8 @@ class MAFIA2Launcher:
                     print("Path mean salinity: ", np.mean(salinity_assimilated))
 
                     t1 = time.time()
-                    self.gmrf_model.update(rel=salinity_assimilated[0], ks=ind_assimilated[0]) #TODO: Avoid bug, for testing
-                    # self.gmrf_model.update(rel=vectorise(salinity_assimilated), ks=ind_assimilated)
+                    # self.gmrf_model.update(rel=salinity_assimilated[0], ks=ind_assimilated[0]) #TODO: Avoid bug, for testing
+                    self.gmrf_model.update(rel=vectorise(salinity_assimilated), ks=ind_assimilated)
                     t2 = time.time()
                     print("Update consumed: ", t2 - t1)
 
