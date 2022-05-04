@@ -10,8 +10,8 @@ from usr_func import latlon2xy
 
 # == Sys
 working_directory = os.getcwd()
-FIGPATH = working_directory + "/MAFIA/fig/"
 FILEPATH = working_directory + "/MAFIA/"
+FIGPATH = FILEPATH + "fig/"
 # ==
 
 # == GP kernel
