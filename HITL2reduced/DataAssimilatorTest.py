@@ -175,7 +175,7 @@ class MAFIA2Launcher:
                         self.counter_waypoint_prerun += 1
                         if self.counter_waypoint_prerun == len(self.trajectory_transect):
                             self.prerun_mode = False
-                            
+                            self.gmrf_model.resetQ()
                         else:
                             lat_waypoint, lon_waypoint, depth_waypoint = self.trajectory_transect[
                                                                          self.counter_waypoint_prerun, :]
