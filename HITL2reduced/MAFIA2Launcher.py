@@ -4,14 +4,13 @@ Author: Yaolin Ge
 Contact: yaolin.ge@ntnu.no
 Date: 2022-04-23
 """
+import time
 
 from usr_func import *
-from Config.AdaframeConfig import * # !!!! ROSPY important
-from Config.Config import *
-from PlanningStrategies.Myopic3D import MyopicPlanning3D
-from Knowledge.Knowledge import Knowledge
-from AUV import AUV
-from spde import spde
+from MAFIA.Simulation.Config.Config import *
+from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
+from MAFIA.Simulation.Knowledge.Knowledge import Knowledge
+from MAFIA.spde import spde
 import pickle
 
 # == Set up
@@ -23,27 +22,26 @@ Z_START = DEPTH_START
 # ==
 
 
-class MAFIA2Launcher:
+class Simulator:
 
     def __init__(self):
         self.load_waypoint()
         self.load_gmrf_grid()
         self.load_gmrf_model()
         self.load_prior()
+        self.load_simulated_truth()
         self.update_knowledge()
         self.load_hash_neighbours()
         self.load_hash_waypoint2gmrf()
         self.initialise_function_calls()
-        self.setup_AUV()
-        self.update_time = rospy.get_time()
         print("S1-S9 complete!")
 
     def load_waypoint(self):
-        self.waypoints = pd.read_csv(FILEPATH + "Config/WaypointGraph.csv").to_numpy()
+        self.waypoints = pd.read_csv(FILEPATH + "Simulation/Config/WaypointGraph.csv").to_numpy()
         print("S1: Waypoint is loaded successfully!")
 
     def load_gmrf_grid(self):
-        self.gmrf_grid = pd.read_csv(FILEPATH + "Config/GMRFGrid.csv").to_numpy()
+        self.gmrf_grid = pd.read_csv(FILEPATH + "Simulation/Config/GMRFGrid.csv").to_numpy()
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
@@ -54,148 +52,237 @@ class MAFIA2Launcher:
         print("S4: Prior is loaded successfully!")
         pass
 
+    def load_simulated_truth(self):
+        path_mu_truth = FILEPATH + "Simulation/Config/Data/data_mu_truth.csv"
+        self.simulated_truth = pd.read_csv(path_mu_truth).to_numpy()[:, -1].reshape(-1, 1)
+        print("S5: Simulated truth is loaded successfully!")
+
     def update_knowledge(self):
         self.knowledge = Knowledge(gmrf_grid=self.gmrf_grid, mu=self.gmrf_model.mu, SigmaDiag=self.gmrf_model.mvar())
-        print("S5: Knowledge of the field is set up successfully!")
+        print("S6: Knowledge of the field is set up successfully!")
 
     def load_hash_neighbours(self):
-        neighbour_file = open(FILEPATH + "Config/HashNeighbours.p", 'rb')
+        neighbour_file = open(FILEPATH + "Simulation/Config/HashNeighbours.p", 'rb')
         self.hash_neighbours = pickle.load(neighbour_file)
         neighbour_file.close()
-        print("S6: Neighbour hash table is loaded successfully!")
+        print("S7: Neighbour hash table is loaded successfully!")
 
     def load_hash_waypoint2gmrf(self):
-        waypoint2gmrf_file = open(FILEPATH + "Config/HashWaypoint2GMRF.p", 'rb')
+        waypoint2gmrf_file = open(FILEPATH + "Simulation/Config/HashWaypoint2GMRF.p", 'rb')
         self.hash_waypoint2gmrf = pickle.load(waypoint2gmrf_file)
         waypoint2gmrf_file.close()
-        print("S7: Waypoint2GMRF hash table is loaded successfully!")
+        print("S8: Waypoint2GMRF hash table is loaded successfully!")
 
     def initialise_function_calls(self):
         get_ind_at_location3d_xyz(self.waypoints, 1, 2, 3)  # used to initialise the function call
-        print("S8: Function calls are initialised successfully!")
-
-    def setup_AUV(self):
-        self.auv = AUV()
-        print("S9: AUV is setup successfully!")
+        print("S9: Function calls are initialised successfully!")
 
     def run(self):
-        self.counter_waypoint = 0
-        self.salinity = []
-
         ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         ind_previous_waypoint = ind_current_waypoint
         ind_pioneer_waypoint = ind_current_waypoint
         ind_next_waypoint = ind_current_waypoint
         ind_visited_waypoint = []
         ind_visited_waypoint.append(ind_current_waypoint)
+        for i in range(NUM_STEPS):
+            print("Step: ", i)
+            ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
+            self.salinity_measured = self.simulated_truth[ind_sample_gmrf][0]
 
-        self.set_waypoint_using_ind_waypoint(ind_current_waypoint)
+            t1 = time.time()
+            self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
+            t2 = time.time()
+            print("Update consumed: ", t2 - t1)
 
-        t_start = time.time()
-        while not rospy.is_shutdown():
-            if self.auv.init:
-                print("Waypoint step: ", self.counter_waypoint)
-                t_end = time.time()
+            self.knowledge.mu = self.gmrf_model.mu
+            self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
-                self.salinity.append(self.auv.currentSalinity)
+            if i == 0:
+                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                    gmrf_model=self.gmrf_model,
+                                                    ind_current=ind_current_waypoint,
+                                                    ind_previous=ind_previous_waypoint,
+                                                    hash_neighbours=self.hash_neighbours,
+                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                    ind_visited=ind_visited_waypoint)
+                ind_next_waypoint = self.pathplanner.ind_next
+                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                    gmrf_model=self.gmrf_model,
+                                                    ind_current=ind_next_waypoint,
+                                                    ind_previous=ind_current_waypoint,
+                                                    hash_neighbours=self.hash_neighbours,
+                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                    ind_visited=ind_visited_waypoint)
+                ind_pioneer_waypoint = self.pathplanner.ind_next
+            else:
+                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                    gmrf_model=self.gmrf_model,
+                                                    ind_current=ind_next_waypoint,
+                                                    ind_previous=ind_current_waypoint,
+                                                    hash_neighbours=self.hash_neighbours,
+                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                    ind_visited=ind_visited_waypoint)
+                ind_pioneer_waypoint = self.pathplanner.ind_next
 
-                self.auv.current_state = self.auv.auv_handler.getState()
-                print("AUV state: ", self.auv.current_state)
+            # == plot gmrf section
+            xrot = self.gmrf_grid[:, 0] * np.cos(ROTATED_ANGLE) - self.gmrf_grid[:, 1] * np.sin(ROTATED_ANGLE)
+            yrot = self.gmrf_grid[:, 0] * np.sin(ROTATED_ANGLE) + self.gmrf_grid[:, 1] * np.cos(ROTATED_ANGLE)
+            zrot = -self.gmrf_grid[:, 2]
 
-                if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
-                        (t_end - t_start) % self.auv.max_submerged_time >= 0):
-                    print("Longer than 10 mins, need a long break")
-                    self.auv.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.auv.min_popup_time,
-                                           phone_number=self.auv.phone_number,
-                                           iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
-                    t_start = time.time()
+            ind_plot = np.where((zrot<0) * (zrot>=-5) * (xrot>70))[0]
+            mu_plot = self.knowledge.mu[ind_plot]
+            self.yplot = xrot[ind_plot]
+            self.xplot = yrot[ind_plot]
+            self.zplot = zrot[ind_plot]
 
-                if self.auv.auv_handler.getState() == "waiting" and rospy.get_time() -self.update_time > WAYPOINT_UPDATE_TIME:
-                    print("Arrived the current location")
+            # fig = go.Figure(data=go.Scatter3d(
+            #     x=self.xplot,
+            #     y=self.yplot,
+            #     z=self.zplot,
+            #     mode='markers',
+            #     marker=dict(color=mu_plot, size=2, opacity=.0)
+            # ))
+            # fig.add_trace(go.Scatter3d(
+            #     x=self.xplot,
+            #     y=self.yplot,
+            #     z=self.zplot,
+            #     mode='markers',
+            #     marker=dict(color=mu_plot)
+            # ))
+            # fig.add_trace(go.Scatter3d(
+            #     x=self.waypoints[:, 1],
+            #     y=self.waypoints[:, 0],
+            #     z=-self.waypoints[:, 2],
+            #     mode='markers',
+            #     marker=dict(color='black', size=1, opacity=.1)
+            # ))
 
-                    ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
-                    self.salinity_measured = np.mean(self.salinity[-10:])
-                    print("Sampled salinity: ", self.salinity_measured)
+            points_int, values_int = interpolate_3d(self.xplot, self.yplot, self.zplot, mu_plot)
+            fig = go.Figure(data=go.Volume(
+                x=points_int[:, 0],
+                y=points_int[:, 1],
+                z=points_int[:, 2],
+                value=values_int.flatten(),
+                # isomin=self.vmin,
+                # isomax=self.vmax,
+                opacity=.4,
+                surface_count=10,
+                coloraxis="coloraxis",
+                caps=dict(x_show=False, y_show=False, z_show=False),
+            ),
+            )
 
-                    t1 = time.time()
-                    self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
-                    t2 = time.time()
-                    print("Update consumed: ", t2 - t1)
+            # == plot waypoint section
+            xrot = self.waypoints[:, 0] * np.cos(ROTATED_ANGLE) - self.waypoints[:, 1] * np.sin(ROTATED_ANGLE)
+            yrot = self.waypoints[:, 0] * np.sin(ROTATED_ANGLE) + self.waypoints[:, 1] * np.cos(ROTATED_ANGLE)
+            zrot = -self.waypoints[:, 2]
+            fig.add_trace(go.Scatter3d(
+                x=yrot,
+                y=xrot,
+                z=zrot,
+                mode='markers',
+                marker=dict(color='black', size=1, opacity=.1)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[yrot[ind_previous_waypoint]],
+                y=[xrot[ind_previous_waypoint]],
+                z=[zrot[ind_previous_waypoint]],
+                mode='markers',
+                marker=dict(color='yellow', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[yrot[ind_current_waypoint]],
+                y=[xrot[ind_current_waypoint]],
+                z=[zrot[ind_current_waypoint]],
+                mode='markers',
+                marker=dict(color='red', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[yrot[ind_next_waypoint]],
+                y=[xrot[ind_next_waypoint]],
+                z=[zrot[ind_next_waypoint]],
+                mode='markers',
+                marker=dict(color='blue', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=[yrot[ind_pioneer_waypoint]],
+                y=[xrot[ind_pioneer_waypoint]],
+                z=[zrot[ind_pioneer_waypoint]],
+                mode='markers',
+                marker=dict(color='green', size=10)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=yrot[ind_visited_waypoint],
+                y=xrot[ind_visited_waypoint],
+                z=zrot[ind_visited_waypoint],
+                mode='markers+lines',
+                marker=dict(color='black', size=4),
+                line=dict(color='black', width=3)
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=yrot[self.pathplanner.ind_candidates],
+                y=xrot[self.pathplanner.ind_candidates],
+                z=zrot[self.pathplanner.ind_candidates],
+                mode='markers',
+                marker=dict(color='orange', size=5, opacity=.3)
+            ))
+            fig.update_coloraxes(colorscale="BrBG", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
+                                                                  tickfont=dict(size=18, family="Times New Roman"),
+                                                                  title="Salinity",
+                                                                  titlefont=dict(size=18, family="Times New Roman")))
+            camera = dict(
+                up=dict(x=0, y=0, z=1),
+                center=dict(x=0, y=0, z=0),
+                eye=dict(x=-1.25, y=-1.25, z=.5)
+            )
+            fig.update_layout(coloraxis_colorbar_x=0.8)
+            fig.update_layout(
+                title={
+                    'text': "Adaptive 3D myopic illustration",
+                    'y': 0.9,
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'yanchor': 'top',
+                    'font': dict(size=30, family="Times New Roman"),
+                },
+                scene=dict(
+                    zaxis=dict(nticks=4, range=[-5, -0.5], ),
+                    xaxis_tickfont=dict(size=14, family="Times New Roman"),
+                    yaxis_tickfont=dict(size=14, family="Times New Roman"),
+                    zaxis_tickfont=dict(size=14, family="Times New Roman"),
+                    xaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+                    yaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+                    zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
+                ),
+                scene_aspectmode='manual',
+                scene_aspectratio=dict(x=1, y=1, z=.25),
+                scene_camera=camera,
+            )
 
-                    self.knowledge.mu = self.gmrf_model.mu
-                    self.knowledge.SigmaDiag = self.gmrf_model.mvar()
+            # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
+            fig.write_image(FIGPATH+"myopic3d/P_{:03d}.jpg".format(i), width=1980, height=1080)
 
-                    if self.counter_waypoint == 0:
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=ind_current_waypoint,
-                                                            ind_previous=ind_previous_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=ind_visited_waypoint)
-                        ind_next_waypoint = self.pathplanner.ind_next
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=ind_next_waypoint,
-                                                            ind_previous=ind_current_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=ind_visited_waypoint)
-                        ind_pioneer_waypoint = self.pathplanner.ind_next
-                    else:
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=ind_next_waypoint,
-                                                            ind_previous=ind_current_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=ind_visited_waypoint)
-                        ind_pioneer_waypoint = self.pathplanner.ind_next
-                    self.counter_waypoint += 1
+            ind_previous_waypoint = ind_current_waypoint
+            ind_current_waypoint = ind_next_waypoint
+            ind_next_waypoint = ind_pioneer_waypoint
+            ind_visited_waypoint.append(ind_current_waypoint)
+            print("previous ind: ", ind_previous_waypoint)
+            print("current ind: ", ind_current_waypoint)
+            print("next ind: ", ind_next_waypoint)
+            print("pioneer ind: ", ind_pioneer_waypoint)
 
-                    ind_previous_waypoint = ind_current_waypoint
-                    ind_current_waypoint = ind_next_waypoint
-                    ind_next_waypoint = ind_pioneer_waypoint
-                    ind_visited_waypoint.append(ind_current_waypoint)
-
-                    x_waypoint = self.waypoints[ind_current_waypoint, 0]
-                    y_waypoint = self.waypoints[ind_current_waypoint, 1]
-                    z_waypoint = self.waypoints[ind_current_waypoint, 2]
-                    lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
-
-                    if self.counter_waypoint >= NUM_STEPS:
-                        self.auv.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.auv.min_popup_time,
-                                               phone_number=self.auv.phone_number,
-                                               iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
-                        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), 0,
-                                                         speed=self.auv.speed)
-                        rospy.signal_shutdown("Mission completed!!!")
-                        break
-                    else:
-                        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint,
-                                                         speed=self.auv.speed)
-                        self.update_time = rospy.get_time()
-                        print("previous ind: ", ind_previous_waypoint)
-                        print("current ind: ", ind_current_waypoint)
-                        print("next ind: ", ind_next_waypoint)
-                        print("pioneer ind: ", ind_pioneer_waypoint)
-
-                self.auv.last_state = self.auv.auv_handler.getState()
-                self.auv.auv_handler.spin()
-            self.auv.rate.sleep()
-
-    def set_waypoint_using_ind_waypoint(self, ind_waypoint):
-        x_waypoint = self.waypoints[ind_waypoint, 0]
-        y_waypoint = self.waypoints[ind_waypoint, 1]
-        z_waypoint = self.waypoints[ind_waypoint, 2]
-        lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
-        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint, speed=self.auv.speed)
-        print("Set waypoint successfully!")
+            if i == NUM_STEPS-1:
+                plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
+            # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
+            break
 
 
 if __name__ == "__main__":
-    s = MAFIA2Launcher()
+    s = Simulator()
     s.run()
+
+#%%
+
 
 
 

@@ -10,16 +10,12 @@ from usr_func import latlon2xy
 
 # == Sys
 working_directory = os.getcwd()
-FILEPATH = working_directory + "/"
-FIGPATH = FILEPATH + "fig/"
+FIGPATH = working_directory + "/MAFIA/fig/"
+FILEPATH = working_directory + "/MAFIA/"
 # ==
 
 # == GP kernel
 THRESHOLD = 27
-# ==
-
-# == GMRF
-GMRF_DISTANCE_NEIGHBOUR = 32
 # ==
 
 # == Path planner

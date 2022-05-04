@@ -35,7 +35,7 @@ class HashNeighbourLocations:
             self.distance_euclidean = np.sqrt(delta_x ** 2 + delta_y ** 2 + delta_z ** 2)
             self.distance_ellipsoid = (delta_x ** 2 / (1.5 * DISTANCE_LATERAL) ** 2) + \
                                       (delta_y ** 2 / (1.5 * DISTANCE_LATERAL) ** 2) + \
-                                      (delta_z ** 2 / (DISTANCE_VERTICAL + 0.3) ** 2)
+                                      (delta_z ** 2 / (1.5*DISTANCE_VERTICAL) ** 2)
             self.ind_neighbour = np.where((self.distance_ellipsoid <= 1) * (self.distance_euclidean > DISTANCE_SELF))[0]
             self.neighbour_hash_table[i] = list(self.ind_neighbour)
         t2 = time.time()
