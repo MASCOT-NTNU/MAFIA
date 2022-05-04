@@ -104,6 +104,7 @@ class MAFIA2Launcher:
                 else:
                     lat_down, lon_down = xy2latlon(x_loc[j], y_loc[j], lat_start, lon_start)
                     self.trajectory_transect.append([lat_down, lon_down, DEPTH_BOTTOM])
+        self.trajectory_transect = np.array(self.trajectory_transect)
         self.prerun_mode = True
         print("S9: Transect line is setup successfully!")
 
@@ -122,7 +123,7 @@ class MAFIA2Launcher:
         while not rospy.is_shutdown():
             if self.auv.init:
                 if self.prerun_mode:
-                    print("Pre-run waypoint step: ", self.counter_waypoint_adaptive, " of ", len(self.trajectory_transect))
+                    print("Pre-run waypoint step: ", self.counter_waypoint_prerun, " of ", len(self.trajectory_transect))
                 else:
                     print("Adaptive waypoint step: ", self.counter_waypoint_adaptive)
                 t_end = time.time()
@@ -173,12 +174,8 @@ class MAFIA2Launcher:
                     print("Arrived the current location")
                     if self.prerun_mode:
                         self.counter_waypoint_prerun += 1
-                        if self.counter_waypoint_prerun == len(self.trajectory_transect):
-                            self.prerun_mode = False
-                            self.gmrf_model.resetQ()
-                        else:
-                            lat_waypoint, lon_waypoint, depth_waypoint = self.trajectory_transect[
-                                                                         self.counter_waypoint_prerun, :]
+                        lat_waypoint, lon_waypoint, depth_waypoint = self.trajectory_transect[
+                                                                     self.counter_waypoint_prerun, :]
                     else:
                         self.ind_previous_waypoint = self.ind_current_waypoint
                         self.ind_current_waypoint = self.ind_next_waypoint
@@ -210,7 +207,11 @@ class MAFIA2Launcher:
                     t2 = time.time()
                     print("Update consumed: ", t2 - t1)
 
-                    if not self.prerun_mode:
+                    if self.prerun_mode:
+                        if self.counter_waypoint_prerun == len(self.trajectory_transect):
+                            self.prerun_mode = False
+                            self.gmrf_model.resetQ()
+                    else:
                         self.knowledge.mu = self.gmrf_model.mu
                         self.knowledge.SigmaDiag = self.gmrf_model.mvar()
                         self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
