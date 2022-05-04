@@ -7,7 +7,7 @@ Date: 2022-04-24
 """
 
 
-from Config.AdaframeConfig import *
+from Config.AUVConfig import *
 from usr_func import *
 from Config.Config import *
 

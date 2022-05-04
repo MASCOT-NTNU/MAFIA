@@ -19,6 +19,12 @@ LON_START = 10.412948
 DEPTH_START = .5
 X_START, Y_START = latlon2xy(LAT_START, LON_START, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 Z_START = DEPTH_START
+VERTICES_TRANSECT = np.array([[63.450421, 10.395289],
+                              [63.453768, 10.420457],
+                              [63.446442, 10.412006]])
+DEPTH_TOP = .5
+DEPTH_BOTTOM = 5.5
+YOYO_LATERAL_DISTANCE = 60
 # ==
 
 
@@ -76,6 +82,32 @@ class Simulator:
     def initialise_function_calls(self):
         get_ind_at_location3d_xyz(self.waypoints, 1, 2, 3)  # used to initialise the function call
         print("S9: Function calls are initialised successfully!")
+
+    def get_transect_trajectory(self):
+        self.trajectory_transect = []
+        for i in range(len(VERTICES_TRANSECT)-1):
+            lat_start, lon_start = VERTICES_TRANSECT[i, :]
+            lat_end, lon_end = VERTICES_TRANSECT[i+1, :]
+            x_range, y_range = latlon2xy(lat_end, lon_end, lat_start, lon_start)
+            distance = np.sqrt(x_range**2 + y_range**2)
+            gap = np.arange(0, distance, YOYO_LATERAL_DISTANCE)
+            angle = np.math.atan2(x_range, y_range)
+            x_loc = gap * np.sin(angle)
+            y_loc = gap * np.cos(angle)
+            for j in range(len(x_loc)):
+                if isEven(j):
+                    lat_up, lon_up = xy2latlon(x_loc[j], y_loc[j], lat_start, lon_start)
+                    self.trajectory_transect.append([lat_up, lon_up, DEPTH_TOP])
+                else:
+                    lat_down, lon_down = xy2latlon(x_loc[j], y_loc[j], lat_start, lon_start)
+                    self.trajectory_transect.append([lat_down, lon_down, DEPTH_BOTTOM])
+        t = np.array(self.trajectory_transect)
+        fig = go.Figure(data=go.Scatter3d(
+            x = t[:, 1],
+            y = t[:, 0],
+            z = -t[:, 2],
+        ))
+        plotly.offline.plot(fig, filename=FIGPATH+"transect_line.html", auto_open=True)
 
     def run(self):
         ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
@@ -279,9 +311,9 @@ class Simulator:
 
 if __name__ == "__main__":
     s = Simulator()
-    s.run()
+    # s.get_transect_trajectory()
+    # s.run()
 
-#%%
 
 
 

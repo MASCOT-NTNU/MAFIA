@@ -28,4 +28,32 @@ def apply_async_with_callback():
 if __name__ == '__main__':
     apply_async_with_callback()
 
+#%%
+import multiprocessing as mp
 
+def print_cube(num):
+    print("PID:", mp.current_process)
+    print("CUB: ", num * num * num)
+
+def print_square(num):
+    print("PID:", mp.current_process)
+    print("Square: ", num * num)
+
+if __name__ == "__main__":
+    p1 = mp.Process(print_cube(5))
+    p2 = mp.Process(print_square(5))
+
+    p1.start()
+    p2.start()
+    p1.join()
+    p2.join()
+    print(p1.is_alive())
+    p2.is_alive()
+    # p1.close()
+    # p2.close()
+    p1.terminate()
+    p2.terminate()
+    # p1.run()
+    # p2.run()
+    # p1.kill()
+    # p2.kill()
