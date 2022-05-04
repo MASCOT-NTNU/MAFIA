@@ -83,30 +83,46 @@ class MAFIA2Launcher:
         self.counter_waypoint = 0
         self.auv_data = []
 
-        # ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
-        ind_current_waypoint = 0
+        ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
         ind_previous_waypoint = ind_current_waypoint
-        ind_pioneer_waypoint = ind_current_waypoint + 1
-        ind_next_waypoint = ind_pioneer_waypoint
         ind_visited_waypoint = []
         ind_visited_waypoint.append(ind_current_waypoint)
 
         self.set_waypoint_using_ind_waypoint(ind_current_waypoint)
 
+        print("Start 2-step planning")
+        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                            gmrf_model=self.gmrf_model,
+                                            ind_current=ind_current_waypoint,
+                                            ind_previous=ind_previous_waypoint,
+                                            hash_neighbours=self.hash_neighbours,
+                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                            ind_visited=ind_visited_waypoint)
+        ind_next_waypoint = self.pathplanner.ind_next
+        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                            gmrf_model=self.gmrf_model,
+                                            ind_current=ind_next_waypoint,
+                                            ind_previous=ind_current_waypoint,
+                                            hash_neighbours=self.hash_neighbours,
+                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                            ind_visited=ind_visited_waypoint)
+        ind_pioneer_waypoint = self.pathplanner.ind_next
+        print("Finished 2-step planning!!!")
+
         t_start = time.time()
         while not rospy.is_shutdown():
             if self.auv.init:
-                # print("Waypoint step: ", self.counter_waypoint)
+                print("Waypoint step: ", self.counter_waypoint)
                 t_end = time.time()
 
                 self.auv_data.append([self.auv.vehicle_pos[0],
                                       self.auv.vehicle_pos[1],
                                       self.auv.vehicle_pos[2],
                                       self.auv.currentSalinity])
-                # print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
-                #       self.auv.vehicle_pos[2], self.auv.currentSalinity)
+                print('Appended data: ', self.auv.vehicle_pos[0], self.auv.vehicle_pos[1],
+                      self.auv.vehicle_pos[2], self.auv.currentSalinity)
                 self.auv.current_state = self.auv.auv_handler.getState()
-                # print("AUV state: ", self.auv.current_state)
+                print("AUV state: ", self.auv.current_state)
 
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
@@ -116,52 +132,8 @@ class MAFIA2Launcher:
                                            iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
                     t_start = time.time()
 
-                if self.auv.auv_handler.getState() == "waiting" and rospy.get_time() -self.update_time > WAYPOINT_UPDATE_TIME:
+                if self.auv.auv_handler.getState() == "waiting" and rospy.get_time() - self.update_time > WAYPOINT_UPDATE_TIME:
                     print("Arrived the current location")
-                    ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
-                    # ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
-                    # self.salinity_measured = np.mean(self.salinity[-10:])
-                    # print("Sampled salinity: ", self.salinity_measured)
-
-                    t1 = time.time()
-                    print("Salinity assimilated: ", salinity_assimilated.shape)
-                    print("Ind assimilated: ", ind_assimilated.shape)
-                    
-                    self.gmrf_model.update(rel=vectorise(salinity_assimilated), ks=ind_assimilated)
-                    t2 = time.time()
-                    print("Update consumed: ", t2 - t1)
-
-                    self.knowledge.mu = self.gmrf_model.mu
-                    self.knowledge.SigmaDiag = self.gmrf_model.mvar()
-
-                    # if self.counter_waypoint == 0:
-                    #     self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                    #                                         gmrf_model=self.gmrf_model,
-                    #                                         ind_current=ind_current_waypoint,
-                    #                                         ind_previous=ind_previous_waypoint,
-                    #                                         hash_neighbours=self.hash_neighbours,
-                    #                                         hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                    #                                         ind_visited=ind_visited_waypoint)
-                    #     ind_next_waypoint = self.pathplanner.ind_next
-                    #     self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                    #                                         gmrf_model=self.gmrf_model,
-                    #                                         ind_current=ind_next_waypoint,
-                    #                                         ind_previous=ind_current_waypoint,
-                    #                                         hash_neighbours=self.hash_neighbours,
-                    #                                         hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                    #                                         ind_visited=ind_visited_waypoint)
-                    #     ind_pioneer_waypoint = self.pathplanner.ind_next
-                    # else:
-                    #     self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                    #                                         gmrf_model=self.gmrf_model,
-                    #                                         ind_current=ind_next_waypoint,
-                    #                                         ind_previous=ind_current_waypoint,
-                    #                                         hash_neighbours=self.hash_neighbours,
-                    #                                         hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                    #                                         ind_visited=ind_visited_waypoint)
-                    #     ind_pioneer_waypoint = self.pathplanner.ind_next
-                    ind_pioneer_waypoint += 1
-                    self.counter_waypoint += 1
 
                     ind_previous_waypoint = ind_current_waypoint
                     ind_current_waypoint = ind_next_waypoint
@@ -184,11 +156,32 @@ class MAFIA2Launcher:
                     else:
                         self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), z_waypoint,
                                                          speed=self.auv.speed)
+                        print("Set waypoint successfully!")
                         self.update_time = rospy.get_time()
                         print("previous ind: ", ind_previous_waypoint)
                         print("current ind: ", ind_current_waypoint)
-                        print("next ind: ", ind_next_waypoint)
-                        print("pioneer ind: ", ind_pioneer_waypoint)
+
+                    ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
+                    print("Path mean salinity: ", np.mean(salinity_assimilated))
+
+                    t1 = time.time()
+                    self.gmrf_model.update(rel=salinity_assimilated[0], ks=ind_assimilated[0]) #TODO: Avoid bug, for testing
+                    # self.gmrf_model.update(rel=vectorise(salinity_assimilated), ks=ind_assimilated)
+                    t2 = time.time()
+                    print("Update consumed: ", t2 - t1)
+
+                    self.knowledge.mu = self.gmrf_model.mu
+                    self.knowledge.SigmaDiag = self.gmrf_model.mvar()
+
+                    self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                        gmrf_model=self.gmrf_model,
+                                                        ind_current=ind_next_waypoint,
+                                                        ind_previous=ind_current_waypoint,
+                                                        hash_neighbours=self.hash_neighbours,
+                                                        hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                        ind_visited=ind_visited_waypoint)
+                    ind_pioneer_waypoint = self.pathplanner.ind_next
+                    self.counter_waypoint += 1
 
                 self.auv.last_state = self.auv.auv_handler.getState()
                 self.auv.auv_handler.spin()
@@ -219,7 +212,7 @@ class MAFIA2Launcher:
             ind_selected = np.where(ind_min_distance == ind_assimilated[i])[0]
             salinity_assimilated[i] = np.mean(dataset[ind_selected, 3])
         print("Ind assimilated: ", ind_assimilated)
-        print("Salinity assimilated: ", salinity_assimilated)
+        print("Salinity assimilated: ", np.mean(salinity_assimilated))
         print("Data assimilation takes: ", t2 - t1)
         self.auv_data = []
         return ind_assimilated, salinity_assimilated
