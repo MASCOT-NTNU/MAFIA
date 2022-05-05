@@ -119,7 +119,7 @@ class spde:
             rel ([k,1]-array): k number of measurements of the GMRF. (k>0).
             ks ([k,]-array): k number of indicies describing the index of the measurment in the field. 
         """
-        if ks:
+        if ks.size>0:
             if self.method == 2:
                 S = self.Stot[ks,:]
                 self.Q = self.Q + S.transpose()@S*1/self.sigma[0]**2
