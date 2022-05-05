@@ -6,6 +6,8 @@ Date: 2022-04-23
 """
 import time
 
+import numpy as np
+
 from usr_func import *
 from MAFIA.Simulation.Config.Config import *
 from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
@@ -311,7 +313,42 @@ class Simulator:
 
     def check_assimilation(self):
         print("hello world")
+        x_start = 1000
+        y_start = -500
+        z_start = .5
+        x_end = 500
+        y_end = 0
+        z_end = 5.5
+        N = 20
+        x = np.linspace(x_start, x_end, N)
+        y = np.linspace(y_start, y_end, N)
+        z = np.linspace(z_start, z_end, N)
+        dataset = np.vstack((x, y, z, np.zeros_like(z))).T
+        ind = self.assimilate_data(dataset)
 
+        fig = go.Figure(data=go.Scatter3d(
+            x=self.gmrf_grid[:, 1],
+            y=self.gmrf_grid[:, 0],
+            z=-self.gmrf_grid[:, 2],
+            mode='markers',
+            marker=dict(color='black', size=2, opacity=.5)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=y,
+            y=x,
+            z=-z,
+            mode='lines+markers',
+            marker=dict(color='red', size=10, opacity=.5),
+            line=dict(color='red', width=4)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=self.gmrf_grid[ind, 1],
+            y=self.gmrf_grid[ind, 0],
+            z=-self.gmrf_grid[ind, 2],
+            mode='markers',
+            marker=dict(color='blue', size=20, opacity=.5)
+        ))
+        plotly.offline.plot(fig, filename=FIGPATH + "check_assimilation.html", auto_open=True)
         pass
 
 
@@ -346,7 +383,9 @@ if __name__ == "__main__":
     # s.run()
     s.check_assimilation()
 
-
+#%%
+plt.plot(s.gmrf_grid[:, 1], s.gmrf_grid[:, 0], 'k.')
+plt.show()
 
 
 
