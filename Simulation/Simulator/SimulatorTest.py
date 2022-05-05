@@ -325,6 +325,7 @@ class Simulator:
         z = np.linspace(z_start, z_end, N)
         dataset = np.vstack((x, y, z, np.zeros_like(z))).T
         ind = self.assimilate_data(dataset)
+        print("ind: ", ind)
 
         fig = go.Figure(data=go.Scatter3d(
             x=self.gmrf_grid[:, 1],

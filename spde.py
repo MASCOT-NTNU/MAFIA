@@ -39,14 +39,16 @@ class spde:
         self.mu3 = self.mu
         if self.method == 2: 
             # reshaping Q for fixed effects
-            self.Q.resize((self.n+2,self.n+2)) 
+            self.Q.resize((self.n+2,self.n+2))
+            self.Q = self.Q.tolil()
             self.Q[self.n,self.n] = 0.01
             self.Q[self.n+1,self.n+1] = 0.1
+            self.Q = self.Q.tocsc()
             self.Q_fac = cholesky(self.Q)
             # setting mean
             self.mu2 = np.hstack([np.zeros(self.n),0,1]).reshape(-1,1) # Mean of random effect and betas
             self.mu3 = self.mu
-            
+
             self.Stot.resize((self.n,self.n+2))
             self.Stot = self.Stot.tolil()
             self.Stot[:,self.n] = np.ones(self.n)
@@ -166,9 +168,11 @@ class spde:
             self.reduce()
         self.Stot = sparse.eye(self.n).tocsc()
         if self.method == 2:
-            self.Q.resize((self.n+2,self.n+2))
-            self.Q[self.n,self.n] = 0.01
-            self.Q[self.n+1,self.n+1] = 0.1
+            self.Q.resize((self.n + 2, self.n + 2))
+            self.Q = self.Q.tolil()
+            self.Q[self.n, self.n] = 0.01
+            self.Q[self.n + 1, self.n + 1] = 0.1
+            self.Q = self.Q.tocsc()
             self.Q_fac = cholesky(self.Q)
             
             self.Stot.resize((self.n,self.n+2))
