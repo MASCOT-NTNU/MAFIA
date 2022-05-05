@@ -124,10 +124,10 @@ class MAFIA2Launcher:
                                       self.auv.vehicle_pos[2],
                                       self.auv.currentSalinity])
                 self.auv.current_state = self.auv.auv_handler.getState()
-                print("Data added: ", self.auv.vehicle_pos[0],
-                                      self.auv.vehicle_pos[1],
-                                      self.auv.vehicle_pos[2],
-                                      self.auv.currentSalinity)
+                # print("Data added: ", self.auv.vehicle_pos[0],
+                #                       self.auv.vehicle_pos[1],
+                #                       self.auv.vehicle_pos[2],
+                #                       self.auv.currentSalinity)
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
                     print("Longer than 10 mins, need a long break")
@@ -202,12 +202,6 @@ class MAFIA2Launcher:
                             print("Set waypoint successfully!")
                             self.update_time = rospy.get_time()
 
-                        ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
-                        t1 = time.time()
-                        self.gmrf_model.update(rel=salinity_assimilated, ks=ind_assimilated)
-                        t2 = time.time()
-                        print("Update consumed: ", t2 - t1)
-
                         if not self.prerun_mode:
                             self.knowledge.mu = self.gmrf_model.mu
                             self.knowledge.SigmaDiag = self.gmrf_model.mvar()
@@ -220,6 +214,12 @@ class MAFIA2Launcher:
                                                                 ind_visited=self.ind_visited_waypoint)
                             self.ind_pioneer_waypoint = self.pathplanner.ind_next
                             self.counter_waypoint_adaptive += 1
+
+                    ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
+                    t1 = time.time()
+                    self.gmrf_model.update(rel=salinity_assimilated, ks=ind_assimilated)
+                    t2 = time.time()
+                    print("Update consumed: ", t2 - t1)
 
                 self.auv.last_state = self.auv.auv_handler.getState()
                 self.auv.auv_handler.spin()
