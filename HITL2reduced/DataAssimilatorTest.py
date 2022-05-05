@@ -51,16 +51,8 @@ class MAFIA2Launcher:
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
-        self.gmrf_model = spde(model=2, reduce=True)
+        self.gmrf_model = spde(model=2, reduce=True, method=2)
         print("S3: GMRF model is loaded successfully!")
-
-    # def load_prior(self):
-    #     print("S4: Prior is loaded successfully!")
-    #     # go path, run
-    #     # assimilate data
-    #     # update , spde
-    #     # reset Q, spde
-    #     pass
 
     def update_knowledge(self):
         self.knowledge = Knowledge(gmrf_grid=self.gmrf_grid, mu=self.gmrf_model.mu, SigmaDiag=self.gmrf_model.mvar())
@@ -110,7 +102,7 @@ class MAFIA2Launcher:
 
     def run(self):
         self.counter_waypoint_adaptive = 0
-        self.counter_waypoint_prerun = 36
+        self.counter_waypoint_prerun = 37
         self.auv_data = []
         self.ind_visited_waypoint = []
 
@@ -132,7 +124,10 @@ class MAFIA2Launcher:
                                       self.auv.vehicle_pos[2],
                                       self.auv.currentSalinity])
                 self.auv.current_state = self.auv.auv_handler.getState()
-
+                print("Data added: ", self.auv.vehicle_pos[0],
+                                      self.auv.vehicle_pos[1],
+                                      self.auv.vehicle_pos[2],
+                                      self.auv.currentSalinity)
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
                     print("Longer than 10 mins, need a long break")
@@ -239,9 +234,10 @@ class MAFIA2Launcher:
         print("Set waypoint successfully!")
 
     def assimilate_data(self, dataset):
+        print("dataset before filtering: ", dataset[:10, :])
         ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) <= .25)[0]
         dataset = dataset[ind_remove_noise_layer, :]
-        print("dataset: ", dataset[:10, :])
+        print("dataset after filtering: ", dataset[:10, :])
         t1 = time.time()
         dx = (vectorise(dataset[:, 0]) @ np.ones([1, self.N_gmrf_grid]) -
               np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 0]).T) ** 2

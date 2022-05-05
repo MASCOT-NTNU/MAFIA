@@ -51,7 +51,7 @@ class Simulator:
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
-        self.gmrf_model = spde(model=2, reduce=True)
+        self.gmrf_model = spde(model=2, reduce=True, method=2)
         print("S3: GMRF model is loaded successfully!")
 
     def load_prior(self):
@@ -312,7 +312,7 @@ class Simulator:
 if __name__ == "__main__":
     s = Simulator()
     # s.get_transect_trajectory()
-    # s.run()
+    s.run()
 
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import sparse
 from sksparse.cholmod import cholesky
-from Simulation.Config.Config import FILEPATH
+from MAFIA.Simulation.Config.Config import FILEPATH
 
 
 class spde:
@@ -50,7 +50,6 @@ class spde:
             self.Stot.resize((self.n,self.n+2))
             self.Stot[:,self.n] = np.ones(self.n)
             self.Stot[:,self.n+1] = self.mu3
-            
 
     def reduce(self):
         """Reduces the grid to have 7 depth layers instead of 11.
