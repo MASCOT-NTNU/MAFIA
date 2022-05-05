@@ -48,6 +48,7 @@ class Simulator:
 
     def load_gmrf_grid(self):
         self.gmrf_grid = pd.read_csv(FILEPATH + "Simulation/Config/GMRFGrid.csv").to_numpy()
+        self.N_gmrf_grid = len(self.gmrf_grid)
         print("S2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
@@ -308,11 +309,42 @@ class Simulator:
             # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
             break
 
+    def check_assimilation(self):
+        print("hello world")
+
+        pass
+
+
+    def assimilate_data(self, dataset):
+        print("dataset before filtering: ", dataset[:10, :])
+        ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) <= .25)[0]
+        dataset = dataset[ind_remove_noise_layer, :]
+        print("dataset after filtering: ", dataset[:10, :])
+        t1 = time.time()
+        dx = (vectorise(dataset[:, 0]) @ np.ones([1, self.N_gmrf_grid]) -
+              np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 0]).T) ** 2
+        dy = (vectorise(dataset[:, 1]) @ np.ones([1, self.N_gmrf_grid]) -
+              np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 1]).T) ** 2
+        dz = ((vectorise(dataset[:, 2]) @ np.ones([1, self.N_gmrf_grid]) -
+              np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 2]).T) * GMRF_DISTANCE_NEIGHBOUR) ** 2
+        dist = dx + dy + dz
+        ind_min_distance = np.argmin(dist, axis=1)
+        t2 = time.time()
+        ind_assimilated = np.unique(ind_min_distance)
+        salinity_assimilated = np.zeros(len(ind_assimilated))
+        for i in range(len(ind_assimilated)):
+            ind_selected = np.where(ind_min_distance == ind_assimilated[i])[0]
+            salinity_assimilated[i] = np.mean(dataset[ind_selected, 3])
+        print("Data assimilation takes: ", t2 - t1)
+        self.auv_data = []
+        print("Reset auv_data: ", self.auv_data)
+        return ind_assimilated, vectorise(salinity_assimilated)
 
 if __name__ == "__main__":
     s = Simulator()
     # s.get_transect_trajectory()
-    s.run()
+    # s.run()
+    s.check_assimilation()
 
 
 

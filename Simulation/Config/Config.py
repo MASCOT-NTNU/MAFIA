@@ -18,6 +18,10 @@ FIGPATH = FILEPATH + "fig/"
 THRESHOLD = 27
 # ==
 
+# == GMRF
+GMRF_DISTANCE_NEIGHBOUR = 32
+# ==
+
 # == Path planner
 NUM_STEPS = 100
 # ==
