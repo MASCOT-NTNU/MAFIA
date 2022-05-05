@@ -173,5 +173,7 @@ class spde:
             self.Stot[:,self.n] = np.ones(self.n)
             self.Stot[:,self.n+1] = self.mu3
             self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
-            
+        print("Q: ", self.Q.shape)
+
+
             

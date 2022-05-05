@@ -110,7 +110,6 @@ class MAFIA2Launcher:
 
     def run(self):
         self.counter_waypoint_adaptive = 0
-        # self.counter_waypoint_prerun = 0
         self.counter_waypoint_prerun = 36
         self.auv_data = []
         self.ind_visited_waypoint = []
@@ -175,8 +174,14 @@ class MAFIA2Launcher:
                     print("Arrived the current location")
                     if self.prerun_mode:
                         self.counter_waypoint_prerun += 1
-                        lat_waypoint, lon_waypoint, depth_waypoint = self.trajectory_transect[
-                                                                     self.counter_waypoint_prerun, :]
+                        if self.counter_waypoint_prerun == len(self.trajectory_transect):
+                            self.prerun_mode = False
+                            self.gmrf_model.resetQ()
+                        else:
+                            lat_waypoint, lon_waypoint, depth_waypoint = self.trajectory_transect[
+                                                                         self.counter_waypoint_prerun, :]
+                            self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint),
+                                                             depth_waypoint, speed=self.auv.speed)
                     else:
                         self.ind_previous_waypoint = self.ind_current_waypoint
                         self.ind_current_waypoint = self.ind_next_waypoint
@@ -188,42 +193,38 @@ class MAFIA2Launcher:
                         lat_waypoint, lon_waypoint = xy2latlon(x_waypoint, y_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
                         depth_waypoint = self.waypoints[self.ind_current_waypoint, 2]
 
-                    if self.counter_waypoint_adaptive >= NUM_STEPS:
-                        self.auv.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.auv.min_popup_time,
-                                               phone_number=self.auv.phone_number,
-                                               iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
-                        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), 0,
-                                                         speed=self.auv.speed)
-                        rospy.signal_shutdown("Mission completed!!!")
-                        break
-                    else:
-                        self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), depth_waypoint,
-                                                         speed=self.auv.speed)
-                        print("Set waypoint successfully!")
-                        self.update_time = rospy.get_time()
+                        if self.counter_waypoint_adaptive >= NUM_STEPS:
+                            self.auv.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.auv.min_popup_time,
+                                                   phone_number=self.auv.phone_number,
+                                                   iridium_dest=self.auv.iridium_destination)  # self.ada_state = "surfacing"
+                            self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), 0,
+                                                             speed=self.auv.speed)
+                            rospy.signal_shutdown("Mission completed!!!")
+                            break
+                        else:
+                            self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), depth_waypoint,
+                                                             speed=self.auv.speed)
+                            print("Set waypoint successfully!")
+                            self.update_time = rospy.get_time()
 
-                    ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
-                    t1 = time.time()
-                    self.gmrf_model.update(rel=salinity_assimilated, ks=ind_assimilated)
-                    t2 = time.time()
-                    print("Update consumed: ", t2 - t1)
+                        ind_assimilated, salinity_assimilated = self.assimilate_data(np.array(self.auv_data))
+                        t1 = time.time()
+                        self.gmrf_model.update(rel=salinity_assimilated, ks=ind_assimilated)
+                        t2 = time.time()
+                        print("Update consumed: ", t2 - t1)
 
-                    if self.prerun_mode:
-                        if self.counter_waypoint_prerun == len(self.trajectory_transect):
-                            self.prerun_mode = False
-                            self.gmrf_model.resetQ()
-                    else:
-                        self.knowledge.mu = self.gmrf_model.mu
-                        self.knowledge.SigmaDiag = self.gmrf_model.mvar()
-                        self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                            gmrf_model=self.gmrf_model,
-                                                            ind_current=self.ind_next_waypoint,
-                                                            ind_previous=self.ind_current_waypoint,
-                                                            hash_neighbours=self.hash_neighbours,
-                                                            hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                            ind_visited=self.ind_visited_waypoint)
-                        self.ind_pioneer_waypoint = self.pathplanner.ind_next
-                        self.counter_waypoint_adaptive += 1
+                        if not self.prerun_mode:
+                            self.knowledge.mu = self.gmrf_model.mu
+                            self.knowledge.SigmaDiag = self.gmrf_model.mvar()
+                            self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
+                                                                gmrf_model=self.gmrf_model,
+                                                                ind_current=self.ind_next_waypoint,
+                                                                ind_previous=self.ind_current_waypoint,
+                                                                hash_neighbours=self.hash_neighbours,
+                                                                hash_waypoint2gmrf=self.hash_waypoint2gmrf,
+                                                                ind_visited=self.ind_visited_waypoint)
+                            self.ind_pioneer_waypoint = self.pathplanner.ind_next
+                            self.counter_waypoint_adaptive += 1
 
                 self.auv.last_state = self.auv.auv_handler.getState()
                 self.auv.auv_handler.spin()
@@ -238,6 +239,9 @@ class MAFIA2Launcher:
         print("Set waypoint successfully!")
 
     def assimilate_data(self, dataset):
+        ind_remove_noise_layer = np.where(dataset[:, 2] <= .25)[0]
+        dataset = dataset[ind_remove_noise_layer, :]
+        print("dataset: ", dataset[:10, :])
         t1 = time.time()
         dx = (vectorise(dataset[:, 0]) @ np.ones([1, self.N_gmrf_grid]) -
               np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 0]).T) ** 2
