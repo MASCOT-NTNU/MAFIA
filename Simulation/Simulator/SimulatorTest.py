@@ -394,7 +394,6 @@ class Simulator:
         plotly.offline.plot(fig, filename=FIGPATH + "check_assimilation.html", auto_open=True)
         pass
 
-
     def assimilate_data(self, dataset):
         print("dataset before filtering: ", dataset[:10, :])
         ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) >= .25)[0]
@@ -419,6 +418,7 @@ class Simulator:
         self.auv_data = []
         print("Reset auv_data: ", self.auv_data)
         return ind_assimilated, vectorise(salinity_assimilated)
+
 
 if __name__ == "__main__":
     s = Simulator()
