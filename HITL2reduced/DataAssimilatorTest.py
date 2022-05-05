@@ -104,6 +104,7 @@ class MAFIA2Launcher:
                 else:
                     lat_down, lon_down = xy2latlon(x_loc[j], y_loc[j], lat_start, lon_start)
                     self.trajectory_transect.append([lat_down, lon_down, DEPTH_BOTTOM])
+        self.trajectory_transect = np.array(self.trajectory_transect)
         self.prerun_mode = True
         print("S9: Transect line is setup successfully!")
 
@@ -122,7 +123,7 @@ class MAFIA2Launcher:
         while not rospy.is_shutdown():
             if self.auv.init:
                 if self.prerun_mode:
-                    print("Pre-run waypoint step: ", self.counter_waypoint_adaptive, " of ", len(self.trajectory_transect))
+                    print("Pre-run waypoint step: ", self.counter_waypoint_prerun, " of ", len(self.trajectory_transect))
                 else:
                     print("Adaptive waypoint step: ", self.counter_waypoint_adaptive)
                 t_end = time.time()
