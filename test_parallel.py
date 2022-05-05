@@ -1,59 +1,50 @@
-import multiprocessing as mp
 import time
+from multiprocessing import Pool
+import numpy as np
 
+def run(fn):
+    # fn: 函数参数是数据列表的一个元素
+    time.sleep(.2)
+    # print(fn * fn)
+    return fn * fn
 
-def foo_pool(x):
-    time.sleep(3)
-    return x * x
+class mafia:
 
+    def __init__(self):
+        print("here comes mafia")
 
-result_list = []
+    def run(self):
+        counter = 0
 
+        while True:
+            if counter % 100 == 0:
+                print("Arrive!")
 
-def log_result(result):
-    # This is called whenever foo_pool(i) returns a result.
-    # result_list is modified only by the main process, not the pool workers.
-    result_list.append(result)
+            time.sleep(.1)
+            counter += 1
 
-
-def apply_async_with_callback():
-    pool = mp.Pool()
-    for i in range(10):
-        print(i)
-        pool.apply_async(foo_pool, args=(i,), callback=log_result)
-    pool.close()
-    pool.join()
-    print(result_list)
-
-if __name__ == '__main__':
-    apply_async_with_callback()
-
-#%%
-import multiprocessing as mp
-
-def print_cube(num):
-    print("PID:", mp.current_process)
-    print("CUB: ", num * num * num)
-
-def print_square(num):
-    print("PID:", mp.current_process)
-    print("Square: ", num * num)
 
 if __name__ == "__main__":
-    p1 = mp.Process(print_cube(5))
-    p2 = mp.Process(print_square(5))
+    testFL = np.arange(10)
+    print('shunxu:')  # 顺序执行(也就是串行执行，单进程)
+    s = time.time()
+    rest = 0
+    for fn in testFL:
+        rest += run(fn)
+    t1 = time.time()
+    print("顺序执行时间：", t1 - s)
+    print("res: ", rest)
 
-    p1.start()
-    p2.start()
-    p1.join()
-    p2.join()
-    print(p1.is_alive())
-    p2.is_alive()
-    # p1.close()
-    # p2.close()
-    p1.terminate()
-    p2.terminate()
-    # p1.run()
-    # p2.run()
-    # p1.kill()
-    # p2.kill()
+    print('concurrent:')  # 创建多个进程，并行执行
+    pool = Pool(1)  # 创建拥有3个进程数量的进程池
+    # testFL:要处理的数据列表，run：处理testFL列表中数据的函数
+    res = [pool.apply_async(run, [i]) for i in testFL]
+    # pool.close()  # 关闭进程池，不再接受新的进程
+    # pool.join()  # 主进程阻塞等待子进程的退出
+    t2 = time.time()
+    rest = 0
+    for r in res:
+        rest += r.get()
+    print("并行执行时间：", t2 - t1)
+    print("res: ", rest)
+
