@@ -47,7 +47,7 @@ class spde:
             self.mu2 = np.hstack([np.zeros(self.n),0,1]).reshape(-1,1) # Mean of random effect and betas
             self.mu3 = self.mu
             
-            self.Stot.resize((self.n,self.n+2))
+            self.Stot.resize((self.n,self.n+2)).tocsc()
             self.Stot[:,self.n] = np.ones(self.n)
             self.Stot[:,self.n+1] = self.mu3
 
@@ -117,19 +117,20 @@ class spde:
             rel ([k,1]-array): k number of measurements of the GMRF. (k>0).
             ks ([k,]-array): k number of indicies describing the index of the measurment in the field. 
         """
-        if self.method == 2:
-            S = self.Stot[ks,:]
-            self.Q = self.Q + S.transpose()@S*1/self.sigma[0]**2
-            self.Q_fac.cholesky_inplace(self.Q)
-            self.mu2 = self.mu2 - self.Q_fac.solve_A(S.transpose()@(S@self.mu2 - rel)*1/self.sigma[0]**2)
-            self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
-        else:
-            mu = self.mu.reshape(-1,1)
-            S = self.Stot[ks,:]
-            self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2
-            self.Q_fac.cholesky_inplace(self.Q)
-            mu = mu - self.Q_fac.solve_A(S.transpose()@(S@mu-rel)*1/self.sigma[0]**2)
-            self.mu = mu.flatten()
+        if ks:
+            if self.method == 2:
+                S = self.Stot[ks,:]
+                self.Q = self.Q + S.transpose()@S*1/self.sigma[0]**2
+                self.Q_fac.cholesky_inplace(self.Q)
+                self.mu2 = self.mu2 - self.Q_fac.solve_A(S.transpose()@(S@self.mu2 - rel)*1/self.sigma[0]**2)
+                self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
+            else:
+                mu = self.mu.reshape(-1,1)
+                S = self.Stot[ks,:]
+                self.Q[ks,ks] = self.Q[ks,ks] + 1/self.sigma[0]**2
+                self.Q_fac.cholesky_inplace(self.Q)
+                mu = mu - self.Q_fac.solve_A(S.transpose()@(S@mu-rel)*1/self.sigma[0]**2)
+                self.mu = mu.flatten()
 
     def mvar(self,Q_fac = None, n=40):
         """Monte Carlo Estimate of the marginal variance of a GMRF.
@@ -168,7 +169,7 @@ class spde:
             self.Q[self.n+1,self.n+1] = 0.1
             self.Q_fac = cholesky(self.Q)
             
-            self.Stot.resize((self.n,self.n+2))
+            self.Stot.resize((self.n,self.n+2)).tocsc()
             self.Stot[:,self.n] = np.ones(self.n)
             self.Stot[:,self.n+1] = self.mu3
             self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
