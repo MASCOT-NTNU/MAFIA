@@ -239,7 +239,7 @@ class MAFIA2Launcher:
         print("Set waypoint successfully!")
 
     def assimilate_data(self, dataset):
-        ind_remove_noise_layer = np.where(dataset[:, 2] <= .25)[0]
+        ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) <= .25)[0]
         dataset = dataset[ind_remove_noise_layer, :]
         print("dataset: ", dataset[:10, :])
         t1 = time.time()
