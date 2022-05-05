@@ -235,7 +235,7 @@ class MAFIA2Launcher:
 
     def assimilate_data(self, dataset):
         print("dataset before filtering: ", dataset[:10, :])
-        ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) <= .25)[0]
+        ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) >= MIN_DEPTH_FOR_DATA_ASSIMILATION)[0]
         dataset = dataset[ind_remove_noise_layer, :]
         print("dataset after filtering: ", dataset[:10, :])
         t1 = time.time()

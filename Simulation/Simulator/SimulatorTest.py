@@ -29,6 +29,15 @@ DEPTH_BOTTOM = 5.5
 YOYO_LATERAL_DISTANCE = 60
 # ==
 
+SQRT1_2 = 1.0/math.sqrt(2.)
+
+
+@vectorize(['float32(float32, float32)'])
+def get_ep(mu, sigma):
+  temp = (THRESHOLD - mu)*SQRT1_2 / sigma
+  cdf = .5 * (1.+math.erf(temp))
+  return cdf
+
 
 class Simulator:
 
@@ -113,19 +122,23 @@ class Simulator:
         plotly.offline.plot(fig, filename=FIGPATH+"transect_line.html", auto_open=True)
 
     def run(self):
-        ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
-        ind_previous_waypoint = ind_current_waypoint
-        ind_pioneer_waypoint = ind_current_waypoint
-        ind_next_waypoint = ind_current_waypoint
-        ind_visited_waypoint = []
-        ind_visited_waypoint.append(ind_current_waypoint)
+        self.ind_current_waypoint = get_ind_at_location3d_xyz(self.waypoints, X_START, Y_START, Z_START)
+        self.ind_previous_waypoint = self.ind_current_waypoint
+        self.ind_pioneer_waypoint = self.ind_current_waypoint
+        self.ind_next_waypoint = self.ind_current_waypoint
+        self.ind_visited_waypoint = []
+        self.ind_visited_waypoint.append(self.ind_current_waypoint)
         for i in range(NUM_STEPS):
             print("Step: ", i)
-            ind_sample_gmrf = self.hash_waypoint2gmrf[ind_current_waypoint]
-            self.salinity_measured = self.simulated_truth[ind_sample_gmrf][0]
+            self.ind_sample_gmrf = self.get_ind_sample(self.ind_previous_waypoint, self.ind_current_waypoint)
+            # ind_sample_gmrf = self.hash_waypoint2gmrf[self.ind_current_waypoint]
+            # self.salinity_measured = self.simulated_truth[ind_sample_gmrf][0]
+            self.salinity_measured = self.simulated_truth[self.ind_sample_gmrf]
+            print("Salinity: ", self.salinity_measured.shape)
+            print("ind sample: ", self.ind_sample_gmrf.shape)
 
             t1 = time.time()
-            self.gmrf_model.update(rel=self.salinity_measured, ks=ind_sample_gmrf)
+            self.gmrf_model.update(rel=self.salinity_measured, ks=self.ind_sample_gmrf)
             t2 = time.time()
             print("Update consumed: ", t2 - t1)
 
@@ -135,29 +148,29 @@ class Simulator:
             if i == 0:
                 self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
                                                     gmrf_model=self.gmrf_model,
-                                                    ind_current=ind_current_waypoint,
-                                                    ind_previous=ind_previous_waypoint,
+                                                    ind_current=self.ind_current_waypoint,
+                                                    ind_previous=self.ind_previous_waypoint,
                                                     hash_neighbours=self.hash_neighbours,
                                                     hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                    ind_visited=ind_visited_waypoint)
-                ind_next_waypoint = self.pathplanner.ind_next
+                                                    ind_visited=self.ind_visited_waypoint)
+                self.ind_next_waypoint = self.pathplanner.ind_next
                 self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
                                                     gmrf_model=self.gmrf_model,
-                                                    ind_current=ind_next_waypoint,
-                                                    ind_previous=ind_current_waypoint,
+                                                    ind_current=self.ind_next_waypoint,
+                                                    ind_previous=self.ind_current_waypoint,
                                                     hash_neighbours=self.hash_neighbours,
                                                     hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                    ind_visited=ind_visited_waypoint)
-                ind_pioneer_waypoint = self.pathplanner.ind_next
+                                                    ind_visited=self.ind_visited_waypoint)
+                self.ind_pioneer_waypoint = self.pathplanner.ind_next
             else:
                 self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
                                                     gmrf_model=self.gmrf_model,
-                                                    ind_current=ind_next_waypoint,
-                                                    ind_previous=ind_current_waypoint,
+                                                    ind_current=self.ind_next_waypoint,
+                                                    ind_previous=self.ind_current_waypoint,
                                                     hash_neighbours=self.hash_neighbours,
                                                     hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                    ind_visited=ind_visited_waypoint)
-                ind_pioneer_waypoint = self.pathplanner.ind_next
+                                                    ind_visited=self.ind_visited_waypoint)
+                self.ind_pioneer_waypoint = self.pathplanner.ind_next
 
             # == plot gmrf section
             xrot = self.gmrf_grid[:, 0] * np.cos(ROTATED_ANGLE) - self.gmrf_grid[:, 1] * np.sin(ROTATED_ANGLE)
@@ -166,6 +179,8 @@ class Simulator:
 
             ind_plot = np.where((zrot<0) * (zrot>=-5) * (xrot>70))[0]
             mu_plot = self.knowledge.mu[ind_plot]
+            var_plot = self.knowledge.SigmaDiag[ind_plot]
+            ep_plot = get_ep(mu_plot.astype(np.float32), var_plot.astype(np.float32))
             self.yplot = xrot[ind_plot]
             self.xplot = yrot[ind_plot]
             self.zplot = zrot[ind_plot]
@@ -192,139 +207,163 @@ class Simulator:
             #     marker=dict(color='black', size=1, opacity=.1)
             # ))
 
-            points_int, values_int = interpolate_3d(self.xplot, self.yplot, self.zplot, mu_plot)
-            fig = go.Figure(data=go.Volume(
-                x=points_int[:, 0],
-                y=points_int[:, 1],
-                z=points_int[:, 2],
-                value=values_int.flatten(),
-                # isomin=self.vmin,
-                # isomax=self.vmax,
-                opacity=.4,
-                surface_count=10,
-                coloraxis="coloraxis",
-                caps=dict(x_show=False, y_show=False, z_show=False),
-            ),
-            )
+            filename = FIGPATH + "myopic3d/mean/P_{:03d}.jpg".format(i)
+            fig_mu = self.plot_figure(mu_plot, filename)
 
-            # == plot waypoint section
-            xrot = self.waypoints[:, 0] * np.cos(ROTATED_ANGLE) - self.waypoints[:, 1] * np.sin(ROTATED_ANGLE)
-            yrot = self.waypoints[:, 0] * np.sin(ROTATED_ANGLE) + self.waypoints[:, 1] * np.cos(ROTATED_ANGLE)
-            zrot = -self.waypoints[:, 2]
-            fig.add_trace(go.Scatter3d(
-                x=yrot,
-                y=xrot,
-                z=zrot,
-                mode='markers',
-                marker=dict(color='black', size=1, opacity=.1)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[yrot[ind_previous_waypoint]],
-                y=[xrot[ind_previous_waypoint]],
-                z=[zrot[ind_previous_waypoint]],
-                mode='markers',
-                marker=dict(color='yellow', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[yrot[ind_current_waypoint]],
-                y=[xrot[ind_current_waypoint]],
-                z=[zrot[ind_current_waypoint]],
-                mode='markers',
-                marker=dict(color='red', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[yrot[ind_next_waypoint]],
-                y=[xrot[ind_next_waypoint]],
-                z=[zrot[ind_next_waypoint]],
-                mode='markers',
-                marker=dict(color='blue', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=[yrot[ind_pioneer_waypoint]],
-                y=[xrot[ind_pioneer_waypoint]],
-                z=[zrot[ind_pioneer_waypoint]],
-                mode='markers',
-                marker=dict(color='green', size=10)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=yrot[ind_visited_waypoint],
-                y=xrot[ind_visited_waypoint],
-                z=zrot[ind_visited_waypoint],
-                mode='markers+lines',
-                marker=dict(color='black', size=4),
-                line=dict(color='black', width=3)
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=yrot[self.pathplanner.ind_candidates],
-                y=xrot[self.pathplanner.ind_candidates],
-                z=zrot[self.pathplanner.ind_candidates],
-                mode='markers',
-                marker=dict(color='orange', size=5, opacity=.3)
-            ))
-            fig.update_coloraxes(colorscale="BrBG", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
-                                                                  tickfont=dict(size=18, family="Times New Roman"),
-                                                                  title="Salinity",
-                                                                  titlefont=dict(size=18, family="Times New Roman")))
-            camera = dict(
-                up=dict(x=0, y=0, z=1),
-                center=dict(x=0, y=0, z=0),
-                eye=dict(x=-1.25, y=-1.25, z=.5)
-            )
-            fig.update_layout(coloraxis_colorbar_x=0.8)
-            fig.update_layout(
-                title={
-                    'text': "Adaptive 3D myopic illustration",
-                    'y': 0.9,
-                    'x': 0.5,
-                    'xanchor': 'center',
-                    'yanchor': 'top',
-                    'font': dict(size=30, family="Times New Roman"),
-                },
-                scene=dict(
-                    zaxis=dict(nticks=4, range=[-5, -0.5], ),
-                    xaxis_tickfont=dict(size=14, family="Times New Roman"),
-                    yaxis_tickfont=dict(size=14, family="Times New Roman"),
-                    zaxis_tickfont=dict(size=14, family="Times New Roman"),
-                    xaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
-                    yaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
-                    zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
-                ),
-                scene_aspectmode='manual',
-                scene_aspectratio=dict(x=1, y=1, z=.25),
-                scene_camera=camera,
-            )
+            filename = FIGPATH + "myopic3d/var/P_{:03d}.jpg".format(i)
+            fig_var = self.plot_figure(var_plot, filename)
 
-            # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
-            fig.write_image(FIGPATH+"myopic3d/P_{:03d}.jpg".format(i), width=1980, height=1080)
+            filename = FIGPATH + "myopic3d/ep/P_{:03d}.jpg".format(i)
+            fig_ep = self.plot_figure(ep_plot, filename)
 
-            ind_previous_waypoint = ind_current_waypoint
-            ind_current_waypoint = ind_next_waypoint
-            ind_next_waypoint = ind_pioneer_waypoint
-            ind_visited_waypoint.append(ind_current_waypoint)
-            print("previous ind: ", ind_previous_waypoint)
-            print("current ind: ", ind_current_waypoint)
-            print("next ind: ", ind_next_waypoint)
-            print("pioneer ind: ", ind_pioneer_waypoint)
+            self.ind_previous_waypoint = self.ind_current_waypoint
+            self.ind_current_waypoint = self.ind_next_waypoint
+            self.ind_next_waypoint = self.ind_pioneer_waypoint
+            self.ind_visited_waypoint.append(self.ind_current_waypoint)
+            print("previous ind: ", self.ind_previous_waypoint)
+            print("current ind: ", self.ind_current_waypoint)
+            print("next ind: ", self.ind_next_waypoint)
+            print("pioneer ind: ", self.ind_pioneer_waypoint)
 
             if i == NUM_STEPS-1:
-                plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
+                plotly.offline.plot(fig_mu, filename=FIGPATH + "myopic3d/mean/P_mean.html", auto_open=True)
+                plotly.offline.plot(fig_var, filename=FIGPATH + "myopic3d/var/P_var.html", auto_open=True)
+                plotly.offline.plot(fig_ep, filename=FIGPATH + "myopic3d/ep/P_ep.html", auto_open=True)
             # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=True)
-            break
+            # break
+
+    def plot_figure(self, value, filename):
+        points_int, values_int = interpolate_3d(self.xplot, self.yplot, self.zplot, value)
+        fig = go.Figure(data=go.Volume(
+            x=points_int[:, 0],
+            y=points_int[:, 1],
+            z=points_int[:, 2],
+            value=values_int.flatten(),
+            # isomin=self.vmin,
+            # isomax=self.vmax,
+            opacity=.4,
+            surface_count=10,
+            coloraxis="coloraxis",
+            caps=dict(x_show=False, y_show=False, z_show=False),
+        ),
+        )
+
+        # == plot waypoint section
+        xrot = self.waypoints[:, 0] * np.cos(ROTATED_ANGLE) - self.waypoints[:, 1] * np.sin(ROTATED_ANGLE)
+        yrot = self.waypoints[:, 0] * np.sin(ROTATED_ANGLE) + self.waypoints[:, 1] * np.cos(ROTATED_ANGLE)
+        zrot = -self.waypoints[:, 2]
+        fig.add_trace(go.Scatter3d(
+            x=yrot,
+            y=xrot,
+            z=zrot,
+            mode='markers',
+            marker=dict(color='black', size=1, opacity=.1)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=[yrot[self.ind_previous_waypoint]],
+            y=[xrot[self.ind_previous_waypoint]],
+            z=[zrot[self.ind_previous_waypoint]],
+            mode='markers',
+            marker=dict(color='yellow', size=10)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=[yrot[self.ind_current_waypoint]],
+            y=[xrot[self.ind_current_waypoint]],
+            z=[zrot[self.ind_current_waypoint]],
+            mode='markers',
+            marker=dict(color='red', size=10)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=[yrot[self.ind_next_waypoint]],
+            y=[xrot[self.ind_next_waypoint]],
+            z=[zrot[self.ind_next_waypoint]],
+            mode='markers',
+            marker=dict(color='blue', size=10)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=[yrot[self.ind_pioneer_waypoint]],
+            y=[xrot[self.ind_pioneer_waypoint]],
+            z=[zrot[self.ind_pioneer_waypoint]],
+            mode='markers',
+            marker=dict(color='green', size=10)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=yrot[self.ind_visited_waypoint],
+            y=xrot[self.ind_visited_waypoint],
+            z=zrot[self.ind_visited_waypoint],
+            mode='markers+lines',
+            marker=dict(color='black', size=4),
+            line=dict(color='black', width=3)
+        ))
+        fig.add_trace(go.Scatter3d(
+            x=yrot[self.pathplanner.ind_candidates],
+            y=xrot[self.pathplanner.ind_candidates],
+            z=zrot[self.pathplanner.ind_candidates],
+            mode='markers',
+            marker=dict(color='orange', size=5, opacity=.3)
+        ))
+        fig.update_coloraxes(colorscale="BrBG", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
+                                                              tickfont=dict(size=18, family="Times New Roman"),
+                                                              title="Salinity",
+                                                              titlefont=dict(size=18, family="Times New Roman")))
+        camera = dict(
+            up=dict(x=0, y=0, z=1),
+            center=dict(x=0, y=0, z=0),
+            eye=dict(x=-1.25, y=-1.25, z=.5)
+        )
+        fig.update_layout(coloraxis_colorbar_x=0.8)
+        fig.update_layout(
+            title={
+                'text': "Adaptive 3D myopic illustration",
+                'y': 0.9,
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top',
+                'font': dict(size=30, family="Times New Roman"),
+            },
+            scene=dict(
+                zaxis=dict(nticks=4, range=[-5, -0.5], ),
+                xaxis_tickfont=dict(size=14, family="Times New Roman"),
+                yaxis_tickfont=dict(size=14, family="Times New Roman"),
+                zaxis_tickfont=dict(size=14, family="Times New Roman"),
+                xaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+                yaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+                zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
+            ),
+            scene_aspectmode='manual',
+            scene_aspectratio=dict(x=1, y=1, z=.25),
+            scene_camera=camera,
+        )
+
+        # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
+        fig.write_image(filename, width=1980, height=1080)
+        return fig
+
+    def get_ind_sample(self, ind_start, ind_end):
+        N = 20
+        x_start, y_start, z_start = self.waypoints[ind_start, :]
+        x_end, y_end, z_end = self.waypoints[ind_end, :]
+        x_path = np.linspace(x_start, x_end, N)
+        y_path = np.linspace(y_start, y_end, N)
+        z_path = np.linspace(z_start, z_end, N)
+        dataset = np.vstack((x_path, y_path, z_path, np.zeros_like(z_path))).T
+        ind, value = self.assimilate_data(dataset)
+        return ind
 
     def check_assimilation(self):
         print("hello world")
         x_start = 1000
         y_start = -500
         z_start = .5
-        x_end = 500
-        y_end = 0
+        x_end = 1000
+        y_end = 500
         z_end = 5.5
         N = 20
         x = np.linspace(x_start, x_end, N)
         y = np.linspace(y_start, y_end, N)
         z = np.linspace(z_start, z_end, N)
         dataset = np.vstack((x, y, z, np.zeros_like(z))).T
-        ind = self.assimilate_data(dataset)
+        ind, value = self.assimilate_data(dataset)
         print("ind: ", ind)
 
         fig = go.Figure(data=go.Scatter3d(
@@ -332,14 +371,14 @@ class Simulator:
             y=self.gmrf_grid[:, 0],
             z=-self.gmrf_grid[:, 2],
             mode='markers',
-            marker=dict(color='black', size=2, opacity=.5)
+            marker=dict(color='black', size=1, opacity=.5)
         ))
         fig.add_trace(go.Scatter3d(
             x=y,
             y=x,
             z=-z,
             mode='lines+markers',
-            marker=dict(color='red', size=10, opacity=.5),
+            marker=dict(color='red', size=2, opacity=.5),
             line=dict(color='red', width=4)
         ))
         fig.add_trace(go.Scatter3d(
@@ -347,15 +386,18 @@ class Simulator:
             y=self.gmrf_grid[ind, 0],
             z=-self.gmrf_grid[ind, 2],
             mode='markers',
-            marker=dict(color='blue', size=20, opacity=.5)
+            marker=dict(color='blue', size=5, opacity=.5, symbol="square")
         ))
+        fig.update_layout(scene_aspectmode='manual',
+                          scene_aspectratio=dict(x=1, y=1, z=1/32))
+
         plotly.offline.plot(fig, filename=FIGPATH + "check_assimilation.html", auto_open=True)
         pass
 
 
     def assimilate_data(self, dataset):
         print("dataset before filtering: ", dataset[:10, :])
-        ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) <= .25)[0]
+        ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) >= .25)[0]
         dataset = dataset[ind_remove_noise_layer, :]
         print("dataset after filtering: ", dataset[:10, :])
         t1 = time.time()
@@ -381,13 +423,7 @@ class Simulator:
 if __name__ == "__main__":
     s = Simulator()
     # s.get_transect_trajectory()
-    # s.run()
-    s.check_assimilation()
-
-#%%
-plt.plot(s.gmrf_grid[:, 1], s.gmrf_grid[:, 0], 'k.')
-plt.show()
-
-
+    s.run()
+    # s.check_assimilation()
 
 
