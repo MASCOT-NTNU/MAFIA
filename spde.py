@@ -47,9 +47,11 @@ class spde:
             self.mu2 = np.hstack([np.zeros(self.n),0,1]).reshape(-1,1) # Mean of random effect and betas
             self.mu3 = self.mu
             
-            self.Stot.resize((self.n,self.n+2)).tocsc()
+            self.Stot.resize((self.n,self.n+2))
+            self.Stot = self.Stot.tolil()
             self.Stot[:,self.n] = np.ones(self.n)
             self.Stot[:,self.n+1] = self.mu3
+            self.Stot = self.Stot.tocsc()
 
     def reduce(self):
         """Reduces the grid to have 7 depth layers instead of 11.
@@ -117,7 +119,7 @@ class spde:
             rel ([k,1]-array): k number of measurements of the GMRF. (k>0).
             ks ([k,]-array): k number of indicies describing the index of the measurment in the field. 
         """
-        if ks:
+        if ks.size>0:
             if self.method == 2:
                 S = self.Stot[ks,:]
                 self.Q = self.Q + S.transpose()@S*1/self.sigma[0]**2
@@ -169,9 +171,11 @@ class spde:
             self.Q[self.n+1,self.n+1] = 0.1
             self.Q_fac = cholesky(self.Q)
             
-            self.Stot.resize((self.n,self.n+2)).tocsc()
+            self.Stot.resize((self.n,self.n+2))
+            self.Stot = self.Stot.tolil()
             self.Stot[:,self.n] = np.ones(self.n)
             self.Stot[:,self.n+1] = self.mu3
+            self.Stot = self.Stot.tocsc()
             self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
         print("Q: ", self.Q.shape)
 
