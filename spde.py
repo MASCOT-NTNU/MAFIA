@@ -48,6 +48,8 @@ class spde:
             # setting mean
             self.mu2 = np.hstack([np.zeros(self.n),0,1]).reshape(-1,1) # Mean of random effect and betas
             self.mu3 = self.mu
+            self.beta0 = 0
+            self.beta1 = 1
 
             self.Stot.resize((self.n,self.n+2))
             self.Stot = self.Stot.tolil()
@@ -100,6 +102,12 @@ class spde:
         else:
             return(Q_fac)
 
+    def save(self):
+        """Saves conditional mean and marginal variance
+        """
+        np.save(FILEPATH + 'models/mucond.npy', self.mu)
+        np.save(FILEPATH + 'models/smvarcond.npy', self.mvar())
+
     def candidate(self,ks,n=150):
         """Returns the marginal variance of all location given that a location (ks) in the GMRF has been measured.
         Uses Monte Carlo samples to calculate the marginal variance for all locations.
@@ -128,6 +136,8 @@ class spde:
                 self.Q_fac.cholesky_inplace(self.Q)
                 self.mu2 = self.mu2 - self.Q_fac.solve_A(S.transpose()@(S@self.mu2 - rel)*1/self.sigma[0]**2)
                 self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
+                self.beta0 = self.mu2[self.n]
+                self.beta1 = self.mu2[self.n+1]
             else:
                 mu = self.mu.reshape(-1,1)
                 S = self.Stot[ks,:]
