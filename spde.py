@@ -203,4 +203,8 @@ class spde:
         print('Treshold is set to %.2f'%(self.threshold))
         np.save(FILEPATH + "models/threshold.npy", self.threshold)
 
-
+    def setCoefLM(self):
+        """Find fixed effects in simple linear model linking SINMOD to predicted GMRF field
+        """
+        np.save(FILEPATH + 'models/Google_coef.npy',np.polyfit(self.mu3,self.mu,1))
+        print("Saved google coefficients.")
