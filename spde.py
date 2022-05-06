@@ -30,7 +30,8 @@ class spde:
         self.lons = tmp[:,3] # min & max longitudes
         self.x = tmp[:,0] # min & max x grid location
         self.y = tmp[:,1] # min & max y grid locations
-        
+        self.threshold = 27
+
         self.reduced = reduce # using a reduced grid
         self.method = method # method 2 is with fixed effects on the SINMOD mean
         if self.reduced:
@@ -192,11 +193,14 @@ class spde:
             self.Stot = self.Stot.tocsc()
             self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
         print("Q: ", self.Q.shape)
+        self.setThreshold()
 
-    def setTreshold(self):
-        """Set treshold for Excursion set
+    def setThreshold(self):
+        """Set threshold for Excursion set
         """
         ind = np.load(FILEPATH + 'models/boundary.npy')
-        self.treshold = self.mu[ind].mean()
-        print('Treshold is set to %.2f'%(self.treshold))
-            
+        self.threshold = self.mu[ind].mean()
+        print('Treshold is set to %.2f'%(self.threshold))
+        np.save(FILEPATH + "models/threshold.npy", self.threshold)
+    
+
