@@ -181,7 +181,9 @@ class MAFIA2Launcher:
                         print("Update consumed: ", t2 - t1)
                         if self.counter_waypoint_prerun == len(self.trajectory_transect):
                             self.prerun_mode = False
-                            self.gmrf_model.resetQ()
+                            self.gmrf_model.postProcessing()
+                            # self.gmrf_model.resetQ()
+
                     else:
                         self.ind_previous_waypoint = self.ind_current_waypoint
                         self.ind_current_waypoint = self.ind_next_waypoint

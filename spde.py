@@ -193,7 +193,6 @@ class spde:
             self.Stot = self.Stot.tocsc()
             self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
         print("Q: ", self.Q.shape)
-        self.setThreshold()
 
     def setThreshold(self):
         """Set threshold for Excursion set
@@ -208,3 +207,11 @@ class spde:
         """
         np.save(FILEPATH + 'models/Google_coef.npy',np.polyfit(self.mu3,self.mu,1))
         print("Saved google coefficients.")
+
+    def postProcessing(self):
+        self.setThreshold()
+        self.resetQ()
+        self.setCoefLM()
+        print("Post processing is successfuilly!")
+
+
