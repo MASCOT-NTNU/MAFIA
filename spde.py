@@ -202,5 +202,5 @@ class spde:
         self.threshold = self.mu[ind].mean()
         print('Treshold is set to %.2f'%(self.threshold))
         np.save(FILEPATH + "models/threshold.npy", self.threshold)
-    
+
 
