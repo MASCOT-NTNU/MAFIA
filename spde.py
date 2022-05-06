@@ -207,5 +207,6 @@ class spde:
         """Find fixed effects in simple linear model linking SINMOD to predicted GMRF field
         """
         np.save('Google_coef.npy',np.polyfit(self.mu3,self.mu,1))
+        print("Saved google coefficients.")
         
         
