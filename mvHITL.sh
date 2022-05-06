@@ -1,5 +1,5 @@
 cp spde.py HITL2reduced/
-# cp -r models HITL2reduced/
+cp -r models HITL2reduced/
 # cp -r Simulation/PreConfig HITL2reduced/
 # cp -r Simulation/Config HITL2reduced/
 # cp -r Simulation/PlanningStrategies HITL2reduced/
