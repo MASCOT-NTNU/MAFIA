@@ -182,8 +182,8 @@ class MAFIA2Launcher:
                         if self.counter_waypoint_prerun == len(self.trajectory_transect):
                             self.prerun_mode = False
                             self.gmrf_model.postProcessing()
-                            print("OLD THRESHOLD: ", THRESHOLD)
                             global THRESHOLD
+                            print("OLD THRESHOLD: ", THRESHOLD)
                             THRESHOLD = self.gmrf_model.threshold
                             print("NEW THRESHOLD: ", THRESHOLD)
                     else:
