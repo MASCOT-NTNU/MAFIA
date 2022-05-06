@@ -2,6 +2,7 @@ import numpy as np
 from scipy import sparse
 from sksparse.cholmod import cholesky
 from MAFIA.Simulation.Config.Config import FILEPATH
+DEFAULT_NUM_SAMPLES = 80 # 150 is too much
 
 
 class spde:
@@ -109,7 +110,7 @@ class spde:
         np.save(FILEPATH + 'models/mucond.npy', self.mu)
         np.save(FILEPATH + 'models/smvarcond.npy', self.mvar())
 
-    def candidate(self,ks,n=150):
+    def candidate(self,ks,n=DEFAULT_NUM_SAMPLES):
         """Returns the marginal variance of all location given that a location (ks) in the GMRF has been measured.
         Uses Monte Carlo samples to calculate the marginal variance for all locations.
 
@@ -147,7 +148,7 @@ class spde:
                 mu = mu - self.Q_fac.solve_A(S.transpose()@(S@mu-rel)*1/self.sigma[0]**2)
                 self.mu = mu.flatten()
 
-    def mvar(self,Q_fac = None, n=150):
+    def mvar(self,Q_fac = None, n=DEFAULT_NUM_SAMPLES):
         """Monte Carlo Estimate of the marginal variance of a GMRF.
 
         Args:
