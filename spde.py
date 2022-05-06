@@ -198,7 +198,10 @@ class spde:
     def setThreshold(self):
         """Set threshold for Excursion set
         """
-        ind = np.load(FILEPATH + 'models/boundary.npy')
+        if self.reduced:
+            ind = np.load(FILEPATH + 'models/boundary_reduced.npy')
+        else:
+            ind = np.load(FILEPATH + 'models/boundary.npy')
         self.threshold = self.mu[ind].mean()
         print('Treshold is set to %.2f'%(self.threshold))
         np.save(FILEPATH + "models/threshold.npy", self.threshold)
