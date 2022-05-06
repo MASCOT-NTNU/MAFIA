@@ -16,15 +16,15 @@ import time
 
 
 vectorize(['float32(float32, float32)'], target='cuda')
-def get_eibv_from_gpu(mu, SigmaDiag):
-  cdf = norm.cdf(THRESHOLD, mu, SigmaDiag)
+def get_eibv_from_gpu(mu, SigmaDiag, threshold=THRESHOLD):
+  cdf = norm.cdf(threshold, mu, SigmaDiag)
   bv = cdf*(1-cdf)
   ibv = np.sum(bv)
   return ibv
 
 
-def get_eibv_from_fast(mu, sigma):
-  p = norm.cdf(THRESHOLD, mu, sigma)
+def get_eibv_from_fast(mu, sigma, threshold=THRESHOLD):
+  p = norm.cdf(threshold, mu, sigma)
   bv = p * (1 - p)
   ibv = np.sum(bv)
   return ibv
@@ -96,7 +96,7 @@ class MyopicPlanning3D:
 
         # eibv = get_eibv_from_gpu(self.knowledge.mu, variance_post)
         t1 = time.time()
-        eibv = get_eibv_from_fast(self.knowledge.mu, variance_post)
+        eibv = get_eibv_from_fast(self.knowledge.mu, variance_post, self.gmrf_model.threshold)
         t2 = time.time()
         # print("EIBV calculation takes: ", t2 - t1)
         return eibv

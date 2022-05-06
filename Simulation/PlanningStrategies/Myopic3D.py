@@ -20,6 +20,7 @@ def get_eibv_from_gpu(mu, SigmaDiag):
   cdf = norm.cdf(THRESHOLD, mu, SigmaDiag)
   bv = cdf*(1-cdf)
   ibv = np.sum(bv)
+  print("Threshod: ", THRESHOLD)
   return ibv
 
 
@@ -27,6 +28,7 @@ def get_eibv_from_fast(mu, sigma):
   p = norm.cdf(THRESHOLD, mu, sigma)
   bv = p * (1 - p)
   ibv = np.sum(bv)
+  print("Threshod: ", THRESHOLD)
   return ibv
 
 

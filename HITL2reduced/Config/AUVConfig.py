@@ -5,7 +5,7 @@ from auv_handler import AuvHandler
 from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
 
 # == Waypoint
-WAYPOINT_UPDATE_TIME = 3.
+WAYPOINT_UPDATE_TIME = 10.
 # ==
 
 # == YoYo

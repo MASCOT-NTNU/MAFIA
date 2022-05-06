@@ -124,10 +124,6 @@ class MAFIA2Launcher:
                                       self.auv.vehicle_pos[2],
                                       self.auv.currentSalinity])
                 self.auv.current_state = self.auv.auv_handler.getState()
-                # print("Data added: ", self.auv.vehicle_pos[0],
-                #                       self.auv.vehicle_pos[1],
-                #                       self.auv.vehicle_pos[2],
-                #                       self.auv.currentSalinity)
                 if ((t_end - t_start) / self.auv.max_submerged_time >= 1 and
                         (t_end - t_start) % self.auv.max_submerged_time >= 0):
                     print("Longer than 10 mins, need a long break")
@@ -182,10 +178,6 @@ class MAFIA2Launcher:
                         if self.counter_waypoint_prerun == len(self.trajectory_transect):
                             self.prerun_mode = False
                             self.gmrf_model.postProcessing()
-                            global THRESHOLD
-                            print("OLD THRESHOLD: ", THRESHOLD)
-                            THRESHOLD = self.gmrf_model.threshold
-                            print("NEW THRESHOLD: ", THRESHOLD)
                     else:
                         self.ind_previous_waypoint = self.ind_current_waypoint
                         self.ind_current_waypoint = self.ind_next_waypoint

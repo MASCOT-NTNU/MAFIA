@@ -128,6 +128,8 @@ class Simulator:
         self.ind_next_waypoint = self.ind_current_waypoint
         self.ind_visited_waypoint = []
         self.ind_visited_waypoint.append(self.ind_current_waypoint)
+        global THRESHOLD
+
         for i in range(NUM_STEPS):
             print("Step: ", i)
             self.ind_sample_gmrf = self.get_ind_sample(self.ind_previous_waypoint, self.ind_current_waypoint)
@@ -162,6 +164,7 @@ class Simulator:
                                                     hash_waypoint2gmrf=self.hash_waypoint2gmrf,
                                                     ind_visited=self.ind_visited_waypoint)
                 self.ind_pioneer_waypoint = self.pathplanner.ind_next
+                THRESHOLD = 26
             else:
                 self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
                                                     gmrf_model=self.gmrf_model,
