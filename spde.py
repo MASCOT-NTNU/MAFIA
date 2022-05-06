@@ -109,6 +109,8 @@ class spde:
         """
         np.save(FILEPATH + 'models/mucond.npy', self.mu)
         np.save(FILEPATH + 'models/smvarcond.npy', self.mvar())
+        if self.method == 2:
+            np.save(FILEPATH + 'models/mu2cond.npy',self.mu2)
 
     def candidate(self,ks,n=DEFAULT_NUM_SAMPLES):
         """Returns the marginal variance of all location given that a location (ks) in the GMRF has been measured.
@@ -212,8 +214,17 @@ class spde:
         np.save(FILEPATH + 'models/Google_coef.npy',np.polyfit(self.mu3,self.mu,1))
         print("Saved google coefficients.")
 
+    def loadPrev(self):
+        if self.method == 2:
+            self.mu2 = np.load(FILEPATH + 'models/mu2cond.npy')
+            self.mu = self.mu2[:self.n,0] + self.mu2[self.n,0] + self.mu3*self.mu2[self.n+1,0]
+            print("Successfully loaded previous model!")
+        else:
+            print('Wrong method... Nothing is updated.')
+
     def postProcessing(self):
         self.setThreshold()
+        self.save()
         self.resetQ()
         self.setCoefLM()
         print("Post processing is successfuilly!")
