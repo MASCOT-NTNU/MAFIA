@@ -83,7 +83,7 @@ class OpArea:
         plt.show()
 
         df = pd.DataFrame(self.polygon_operational_area, columns=['lat', 'lon'])
-        df.to_csv(FILEPATH+"Simulation/PreConfig/Polygon_border.csv", index=False)
+        df.to_csv(FILEPATH+"Simulation/PreConfig/polygon_border.csv", index=False)
 
     def get_intersected_polygons(self, polygon1, polygon2):
         return polygon1.intersection(polygon2)
