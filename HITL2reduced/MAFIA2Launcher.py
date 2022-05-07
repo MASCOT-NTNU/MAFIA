@@ -163,9 +163,9 @@ class MAFIA2Launcher:
                         print("Finished 2-step planning!!!")
 
                 if not self.popup:
-                    if self.auv.auv_handler.getState() == "waiting":
-                    # if (self.auv.auv_handler.getState() == "waiting" and
-                            # rospy.get_time() - self.update_time > WAYPOINT_UPDATE_TIME):
+                    # if self.auv.auv_handler.getState() == "waiting":
+                    if (self.auv.auv_handler.getState() == "waiting" and
+                            rospy.get_time() - self.update_time > WAYPOINT_UPDATE_TIME):
                         print("Arrived the current location")
                         if self.prerun_mode:
                             self.counter_waypoint_prerun += 1
@@ -226,7 +226,9 @@ class MAFIA2Launcher:
                             self.ind_pioneer_waypoint = self.pathplanner.ind_next
                             self.counter_waypoint_adaptive += 1
                 else:
-                    if self.auv.auv_handler.getState() != "waiting":
+                    # if self.auv.auv_handler.getState() == "waiting":
+                    if (self.auv.auv_handler.getState() == "waiting" and
+                            rospy.get_time() - self.update_time > WAYPOINT_UPDATE_TIME):
                         self.popup = False
 
                 self.auv.last_state = self.auv.auv_handler.getState()
