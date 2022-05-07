@@ -3,7 +3,7 @@ from scipy import sparse
 from sksparse.cholmod import cholesky
 from Config.Config import FILEPATH
 
-DEFAULT_NUM_SAMPLES = 80  # 150 is too much
+DEFAULT_NUM_SAMPLES = 60  # 150, 80 is too much
 
 
 class spde:
@@ -34,7 +34,7 @@ class spde:
         self.lons = tmp[:, 3]  # min & max longitudes
         self.x = tmp[:, 0]  # min & max x grid location
         self.y = tmp[:, 1]  # min & max y grid locations
-        self.threshold = 27
+        self.threshold = 27 # default threshold
 
         self.reduced = reduce  # using a reduced grid
         self.method = method  # method 2 is with fixed effects on the SINMOD mean
@@ -114,6 +114,8 @@ class spde:
         """
         np.save(FILEPATH + 'models/mucond.npy', self.mu)
         np.save(FILEPATH + 'models/smvarcond.npy', self.mvar())
+        if self.method == 2:
+            np.save(FILEPATH + 'models/mu2cond.npy', self.mu2)
 
     def candidate(self, ks, n=DEFAULT_NUM_SAMPLES):
         """Returns the marginal variance of all location given that a location (ks) in the GMRF has been measured.
@@ -205,7 +207,10 @@ class spde:
     def setThreshold(self):
         """Set threshold for Excursion set
         """
-        ind = np.load(FILEPATH + 'models/boundary.npy')
+        if self.reduced:
+            ind = np.load(FILEPATH + 'models/boundary_reduced.npy')
+        else:
+            ind = np.load(FILEPATH + 'models/boundary.npy')
         self.threshold = self.mu[ind].mean()
         print('Treshold is set to %.2f' % (self.threshold))
         np.save(FILEPATH + "models/threshold.npy", self.threshold)
@@ -216,13 +221,19 @@ class spde:
         np.save(FILEPATH + 'models/Google_coef.npy', np.polyfit(self.mu3, self.mu, 1))
         print("Saved google coefficients.")
 
+    def loadPrev(self):
+        if self.method == 2:
+            self.mu2 = np.load(FILEPATH + 'models/mu2cond.npy')
+            self.mu = self.mu2[:self.n, 0] + self.mu2[self.n, 0] + self.mu3 * self.mu2[self.n + 1, 0]
+            print("Successfully loaded previous model!")
+        else:
+            print('Wrong method... Nothing is updated.')
+
     def postProcessing(self):
         self.setThreshold()
+        self.save()
         self.resetQ()
         self.setCoefLM()
-        print("Post processing is successfuilly!")
+        print("Post processing is successfully!")
 
 
-
-
-            

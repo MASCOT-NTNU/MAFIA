@@ -15,7 +15,7 @@ FIGPATH = FILEPATH + "fig/"
 # ==
 
 # == GP kernel
-THRESHOLD = 27
+# THRESHOLD = 27
 # ==
 
 # == GMRF
