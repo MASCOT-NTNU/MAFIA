@@ -227,6 +227,6 @@ class spde:
         self.save()
         self.resetQ()
         self.setCoefLM()
-        print("Post processing is successfuilly!")
+        print("Post processing is successfully!")
 
 
