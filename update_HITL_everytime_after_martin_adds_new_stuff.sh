@@ -10,3 +10,4 @@ cp -r models HITL2reduced/
 # cp HITL/Config/AdaframeConfig.py HITL2reduced/Config/AdaframeConfig.py
 
 echo "Finished copying! Congrats"
+echo "Remember to check header in spde"
