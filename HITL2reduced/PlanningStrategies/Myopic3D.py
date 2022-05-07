@@ -16,14 +16,14 @@ import time
 
 
 vectorize(['float32(float32, float32, float32)'], target='cuda')
-def get_eibv_from_gpu(mu, SigmaDiag, threshold=THRESHOLD):
+def get_eibv_from_gpu(mu, SigmaDiag, threshold):
   cdf = norm.cdf(threshold, mu, SigmaDiag)
   bv = cdf*(1-cdf)
   ibv = np.sum(bv)
   return ibv
 
 
-def get_eibv_from_fast(mu, sigma, threshold=THRESHOLD):
+def get_eibv_from_fast(mu, sigma, threshold):
   p = norm.cdf(threshold, mu, sigma)
   bv = p * (1 - p)
   ibv = np.sum(bv)
