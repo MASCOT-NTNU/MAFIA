@@ -102,7 +102,7 @@ class MAFIA2Launcher:
 
     def run(self):
         self.counter_waypoint_adaptive = 0
-        self.counter_waypoint_prerun = 0
+        self.counter_waypoint_prerun = 35
         self.auv_data = []
         self.ind_visited_waypoint = []
         self.popup = False
