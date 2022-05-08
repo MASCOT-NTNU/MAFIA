@@ -224,7 +224,7 @@ class spde:
 
     def postProcessing(self):
         self.setThreshold()
-        self.save()
+        # self.save()
         self.resetQ()
         self.setCoefLM()
         print("Post processing is successfully!")
