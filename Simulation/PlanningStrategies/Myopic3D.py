@@ -32,21 +32,37 @@ def get_eibv_from_fast(mu, sigma, threshold):
 
 class MyopicPlanning3D:
 
-    def __init__(self, knowledge=None, waypoints=None, gmrf_model=None, ind_current=None, ind_previous=None,
-                 hash_neighbours=None, hash_waypoint2gmrf=None, ind_visited=None):
-
-        self.knowledge = knowledge
+    def __init__(self, waypoints=None, hash_neighbours=None, hash_waypoint2gmrf=None):
         self.waypoints = waypoints
-        self.gmrf_model = gmrf_model
-        self.ind_current = ind_current
-        self.ind_previous = ind_previous
         self.hash_neighbours = hash_neighbours
         self.hash_waypoint2gmrf = hash_waypoint2gmrf
+        print("MyopicPlanner is ready")
+
+    def update_planner(self, knowledge=None, gmrf_model=None):
+        self.knowledge = knowledge
+        self.gmrf_model = gmrf_model
+        print("Planner is updated successfully!")
+
+    def find_next_waypoint_using_min_eibv(self, ind_current=None, ind_previous=None, ind_visited=None):
+        self.ind_current = ind_current
+        self.ind_previous = ind_previous
         self.ind_visited = ind_visited
 
         self.find_all_neighbours()
         self.smooth_filter_neighbours()
-        self.find_next_waypoint_using_min_eibv()
+        self.EIBV = []
+        t1 = time.time()
+        for ind_candidate in self.ind_candidates:
+            self.EIBV.append(self.get_eibv_from_gmrf_model(self.hash_waypoint2gmrf[ind_candidate]))
+        if self.EIBV:
+            self.ind_next = self.ind_candidates[np.argmin(self.EIBV)]
+        else:
+            self.ind_next = self.ind_neighbours[np.random.randint(len(self.ind_neighbours))]
+        t2 = time.time()
+        print("Path planning takes: ", t2 - t1)
+        np.savetxt(FILEPATH + "Simulation/Waypoint/ind_next.txt", np.array([self.ind_next]))
+        print("ind_next is saved!")
+        return self.ind_next
 
     def find_all_neighbours(self):
         self.ind_neighbours = self.hash_neighbours[self.ind_current]
@@ -75,18 +91,6 @@ class MyopicPlanning3D:
         dz = z_end - z_start
 
         return vectorise([dx, dy, dz])
-
-    def find_next_waypoint_using_min_eibv(self):
-        self.EIBV = []
-        t1 = time.time()
-        for ind_candidate in self.ind_candidates:
-            self.EIBV.append(self.get_eibv_from_gmrf_model(self.hash_waypoint2gmrf[ind_candidate]))
-        if self.EIBV:
-            self.ind_next = self.ind_candidates[np.argmin(self.EIBV)]
-        else:
-            self.ind_next = self.ind_neighbours[np.random.randint(len(self.ind_neighbours))]
-        t2 = time.time()
-        print("Path planning takes: ", t2 - t1)
 
     def get_eibv_from_gmrf_model(self, ind_candidate):
         t1 = time.time()

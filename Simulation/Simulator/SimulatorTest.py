@@ -14,6 +14,7 @@ from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
 from MAFIA.Simulation.Knowledge.Knowledge import Knowledge
 from MAFIA.spde import spde
 import pickle
+import concurrent.futures
 
 # == Set up
 LAT_START = 63.447231
@@ -129,6 +130,9 @@ class Simulator:
         self.ind_visited_waypoint = []
         self.ind_visited_waypoint.append(self.ind_current_waypoint)
 
+        self.myopic3d_planner = MyopicPlanning3D(waypoints=self.waypoints, hash_neighbours=self.hash_neighbours,
+                                                  hash_waypoint2gmrf=self.hash_waypoint2gmrf)
+
         for i in range(NUM_STEPS):
             print("Step: ", i)
             self.ind_sample_gmrf = self.get_ind_sample(self.ind_previous_waypoint, self.ind_current_waypoint)
@@ -147,31 +151,27 @@ class Simulator:
             self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
             if i == 0:
-                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                    gmrf_model=self.gmrf_model,
-                                                    ind_current=self.ind_current_waypoint,
-                                                    ind_previous=self.ind_previous_waypoint,
-                                                    hash_neighbours=self.hash_neighbours,
-                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                    ind_visited=self.ind_visited_waypoint)
-                self.ind_next_waypoint = self.pathplanner.ind_next
-                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                    gmrf_model=self.gmrf_model,
-                                                    ind_current=self.ind_next_waypoint,
-                                                    ind_previous=self.ind_current_waypoint,
-                                                    hash_neighbours=self.hash_neighbours,
-                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                    ind_visited=self.ind_visited_waypoint)
-                self.ind_pioneer_waypoint = self.pathplanner.ind_next
+                self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
+                                    self.ind_current_waypoint,
+                                    self.ind_previous_waypoint,
+                                    self.ind_visited_waypoint)
+                self.ind_next_waypoint = int(np.loadtxt(FILEPATH + "Simulation/Waypoint/ind_next.txt"))
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
+                                    self.ind_next_waypoint,
+                                    self.ind_current_waypoint,
+                                    self.ind_visited_waypoint)
+                self.ind_pioneer_waypoint = int(np.loadtxt(FILEPATH + "Simulation/Waypoint/ind_next.txt"))
             else:
-                self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
-                                                    gmrf_model=self.gmrf_model,
-                                                    ind_current=self.ind_next_waypoint,
-                                                    ind_previous=self.ind_current_waypoint,
-                                                    hash_neighbours=self.hash_neighbours,
-                                                    hash_waypoint2gmrf=self.hash_waypoint2gmrf,
-                                                    ind_visited=self.ind_visited_waypoint)
-                self.ind_pioneer_waypoint = self.pathplanner.ind_next
+                self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
+                                    self.ind_next_waypoint,
+                                    self.ind_current_waypoint,
+                                    self.ind_visited_waypoint)
+                self.ind_pioneer_waypoint = int(np.loadtxt(FILEPATH + "Simulation/Waypoint/ind_next.txt"))
 
             # == plot gmrf section
             xrot = self.gmrf_grid[:, 0] * np.cos(ROTATED_ANGLE) - self.gmrf_grid[:, 1] * np.sin(ROTATED_ANGLE)
@@ -296,13 +296,13 @@ class Simulator:
             marker=dict(color='black', size=4),
             line=dict(color='black', width=3)
         ))
-        fig.add_trace(go.Scatter3d(
-            x=yrot[self.pathplanner.ind_candidates],
-            y=xrot[self.pathplanner.ind_candidates],
-            z=zrot[self.pathplanner.ind_candidates],
-            mode='markers',
-            marker=dict(color='orange', size=5, opacity=.3)
-        ))
+        # fig.add_trace(go.Scatter3d(
+        #     x=yrot[self.myopic3d_planner.ind_candidates],
+        #     y=xrot[self.myopic3d_planner.ind_candidates],
+        #     z=zrot[self.myopic3d_planner.ind_candidates],
+        #     mode='markers',
+        #     marker=dict(color='orange', size=5, opacity=.3)
+        # ))
         fig.update_coloraxes(colorscale="BrBG", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
                                                               tickfont=dict(size=18, family="Times New Roman"),
                                                               title="Salinity",

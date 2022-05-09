@@ -2,7 +2,7 @@ import numpy as np
 from scipy import sparse
 from sksparse.cholmod import cholesky
 from MAFIA.Simulation.Config.Config import FILEPATH
-DEFAULT_NUM_SAMPLES = 80 # 150 is too much
+DEFAULT_NUM_SAMPLES = 40 # 150 is too much
 
 
 class spde:
