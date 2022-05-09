@@ -103,21 +103,13 @@ class MAFIA2Launcher:
         self.set_waypoint_using_ind_waypoint(self.ind_current_waypoint)
         print("Start 2-step planning")
         self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            print("Start concurrent")
-            executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
-                            self.ind_current_waypoint,
-                            self.ind_previous_waypoint,
-                            self.ind_visited_waypoint)
-            print("End concurrent")
+        self.myopic3d_planner.find_next_waypoint_using_min_eibv(self.ind_current_waypoint,
+                                                                self.ind_previous_waypoint,
+                                                                self.ind_visited_waypoint)
         self.ind_next_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            print("Start concurrent")
-            executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
-                            self.ind_next_waypoint,
-                            self.ind_current_waypoint,
-                            self.ind_visited_waypoint)
-            print("End concurrent")
+        self.myopic3d_planner.find_next_waypoint_using_min_eibv(self.ind_next_waypoint,
+                                                                self.ind_current_waypoint,
+                                                                self.ind_visited_waypoint)
         self.ind_pioneer_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
         print("Finished 2-step planning!!!")
 
