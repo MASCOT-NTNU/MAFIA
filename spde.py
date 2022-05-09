@@ -43,8 +43,8 @@ class spde:
             # reshaping Q for fixed effects
             self.Q.resize((self.n+2,self.n+2))
             self.Q = self.Q.tolil()
-            self.Q[self.n,self.n] = 0.01
-            self.Q[self.n+1,self.n+1] = 0.1
+            self.Q[self.n,self.n] = 0.02
+            self.Q[self.n+1,self.n+1] = 10
             self.Q = self.Q.tocsc()
             self.Q_fac = cholesky(self.Q)
             # setting mean
@@ -162,7 +162,7 @@ class spde:
         if self.method == 2:
             z = np.random.normal(size = (self.n+2)*n).reshape((self.n+2),n)
             data = Q_fac.apply_Pt(Q_fac.solve_Lt(z,use_LDLt_decomposition=False)) 
-            data = data[:self.n,:] + data[self.n,:] + self.mu3.reshape(-1,1)*data[self.n+1,:].reshape(1,-1)
+            data = data[:self.n,:] + data[self.n,:] + self.mu3[:,np.newaxis]*data[self.n+1,:][np.newaxis,:]
         else:
             z = np.random.normal(size = self.n*n).reshape(self.n,n)
             data = Q_fac.apply_Pt(Q_fac.solve_Lt(z,use_LDLt_decomposition=False)) 
@@ -184,8 +184,8 @@ class spde:
         if self.method == 2:
             self.Q.resize((self.n + 2, self.n + 2))
             self.Q = self.Q.tolil()
-            self.Q[self.n, self.n] = 0.01
-            self.Q[self.n + 1, self.n + 1] = 0.1
+            self.Q[self.n, self.n] = 0.02
+            self.Q[self.n + 1, self.n + 1] = 10
             self.Q = self.Q.tocsc()
             self.Q_fac = cholesky(self.Q)
             
