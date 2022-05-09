@@ -32,9 +32,9 @@ YOYO_LATERAL_DISTANCE = 60
 SQRT1_2 = 1.0/math.sqrt(2.)
 
 
-@vectorize(['float32(float32, float32)'])
-def get_ep(mu, sigma):
-  temp = (THRESHOLD - mu)*SQRT1_2 / sigma
+@vectorize(['float32(float32, float32, float32)'])
+def get_ep(mu, sigma, threshold):
+  temp = (threshold - mu)*SQRT1_2 / sigma
   cdf = .5 * (1.+math.erf(temp))
   return cdf
 
@@ -128,7 +128,6 @@ class Simulator:
         self.ind_next_waypoint = self.ind_current_waypoint
         self.ind_visited_waypoint = []
         self.ind_visited_waypoint.append(self.ind_current_waypoint)
-        global THRESHOLD
 
         for i in range(NUM_STEPS):
             print("Step: ", i)
@@ -164,7 +163,6 @@ class Simulator:
                                                     hash_waypoint2gmrf=self.hash_waypoint2gmrf,
                                                     ind_visited=self.ind_visited_waypoint)
                 self.ind_pioneer_waypoint = self.pathplanner.ind_next
-                THRESHOLD = 26
             else:
                 self.pathplanner = MyopicPlanning3D(knowledge=self.knowledge, waypoints=self.waypoints,
                                                     gmrf_model=self.gmrf_model,
@@ -183,7 +181,7 @@ class Simulator:
             ind_plot = np.where((zrot<0) * (zrot>=-5) * (xrot>70))[0]
             mu_plot = self.knowledge.mu[ind_plot]
             var_plot = self.knowledge.SigmaDiag[ind_plot]
-            ep_plot = get_ep(mu_plot.astype(np.float32), var_plot.astype(np.float32))
+            ep_plot = get_ep(mu_plot.astype(np.float32), var_plot.astype(np.float32), np.float32(self.gmrf_model.threshold))
             self.yplot = xrot[ind_plot]
             self.xplot = yrot[ind_plot]
             self.zplot = zrot[ind_plot]

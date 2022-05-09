@@ -15,20 +15,18 @@ from MAFIA.Simulation.Config.Config import *
 import time
 
 
-vectorize(['float32(float32, float32)'], target='cuda')
-def get_eibv_from_gpu(mu, SigmaDiag):
-  cdf = norm.cdf(THRESHOLD, mu, SigmaDiag)
+vectorize(['float32(float32, float32, float32)'], target='cuda')
+def get_eibv_from_gpu(mu, SigmaDiag, threshold):
+  cdf = norm.cdf(threshold, mu, SigmaDiag)
   bv = cdf*(1-cdf)
   ibv = np.sum(bv)
-  print("Threshod: ", THRESHOLD)
   return ibv
 
 
-def get_eibv_from_fast(mu, sigma):
-  p = norm.cdf(THRESHOLD, mu, sigma)
+def get_eibv_from_fast(mu, sigma, threshold):
+  p = norm.cdf(threshold, mu, sigma)
   bv = p * (1 - p)
   ibv = np.sum(bv)
-  print("Threshod: ", THRESHOLD)
   return ibv
 
 
@@ -98,7 +96,7 @@ class MyopicPlanning3D:
 
         # eibv = get_eibv_from_gpu(self.knowledge.mu, variance_post)
         t1 = time.time()
-        eibv = get_eibv_from_fast(self.knowledge.mu, variance_post)
+        eibv = get_eibv_from_fast(self.knowledge.mu, variance_post, self.gmrf_model.threshold)
         t2 = time.time()
         # print("EIBV calculation takes: ", t2 - t1)
         return eibv

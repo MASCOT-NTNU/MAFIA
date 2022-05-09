@@ -111,6 +111,7 @@ class spde:
         np.save(FILEPATH + 'models/smvarcond.npy', self.mvar())
         if self.method == 2:
             np.save(FILEPATH + 'models/mu2cond.npy',self.mu2)
+        print("Data is saved successfully!")
 
     def candidate(self,ks,n=DEFAULT_NUM_SAMPLES):
         """Returns the marginal variance of all location given that a location (ks) in the GMRF has been measured.
@@ -224,7 +225,7 @@ class spde:
 
     def postProcessing(self):
         self.setThreshold()
-        # self.save()
+        self.save()
         self.resetQ()
         self.setCoefLM()
         print("Post processing is successfully!")
