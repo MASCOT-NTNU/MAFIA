@@ -123,7 +123,7 @@ class MAFIA2Launcher:
         while not rospy.is_shutdown():
             if self.auv.init:
                 if self.prerun_mode:
-                    print("Pre-run waypoint step: ", self.counter_waypoint_prerun, " of ", len(self.trajectory_transect))
+                    print("Pre-run waypoint step: ", self.counter_waypoint_prerun+1, " of ", len(self.trajectory_transect))
                 else:
                     print("Adaptive waypoint step: ", self.counter_waypoint_adaptive, " of , ", NUM_STEPS)
                 t_end = time.time()
@@ -154,8 +154,8 @@ class MAFIA2Launcher:
                         print("Start 2-step planning")
                         # self.pool.apply_async()
                         self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
-                        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-                        # with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                        # with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                             print("Start concurrent")
                             executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
                                             self.ind_current_waypoint,
@@ -163,8 +163,8 @@ class MAFIA2Launcher:
                                             self.ind_visited_waypoint)
                             print("End concurrent")
                         self.ind_next_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
-                        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-                        # with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                        # with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                             print("Start concurrent")
                             executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
                                             self.ind_next_waypoint,
@@ -230,8 +230,8 @@ class MAFIA2Launcher:
                             self.knowledge.SigmaDiag = self.gmrf_model.mvar()
 
                             self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
-                            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-                            # with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                            # with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+                            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                                 print("Start concurrent")
                                 executor.submit(self.myopic3d_planner.find_next_waypoint_using_min_eibv,
                                                 self.ind_next_waypoint,
