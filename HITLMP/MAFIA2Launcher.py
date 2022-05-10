@@ -212,6 +212,7 @@ class MAFIA2Launcher:
                                 self.auv.auv_handler.setWaypoint(deg2rad(lat_waypoint), deg2rad(lon_waypoint), 0,
                                                                  speed=self.auv.speed)
                                 print("Mission complete! Congrates!")
+                                self.auv.send_SMS_mission_complete()
                                 rospy.signal_shutdown("Mission completed!!!")
                                 break
                             else:
