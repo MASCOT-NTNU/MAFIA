@@ -40,6 +40,7 @@ class MAFIA2Launcher:
         self.setup_AUV()
         self.update_time = rospy.get_time()
         self.setup_myopic3d_planner()
+        self.popup = False
         print("S1-S10 complete!")
 
     def load_waypoint(self):
@@ -91,9 +92,8 @@ class MAFIA2Launcher:
         self.auv_data = []
         self.ind_visited_waypoint = []
 
-        lat_waypoint, lon_waypoint = VERTICES_TRANSECT[-1, :]
+        lat_waypoint, lon_waypoint = VERTICES_TRANSECT[-2, :]
         depth_waypoint = DEPTH_TOP
-
         x_start, y_start = latlon2xy(lat_waypoint, lon_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
         z_start = depth_waypoint
 
@@ -102,15 +102,22 @@ class MAFIA2Launcher:
         self.ind_visited_waypoint.append(self.ind_current_waypoint)
         self.set_waypoint_using_ind_waypoint(self.ind_current_waypoint)
         print("Start 2-step planning")
-        self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
-        self.myopic3d_planner.find_next_waypoint_using_min_eibv(self.ind_current_waypoint,
-                                                                self.ind_previous_waypoint,
-                                                                self.ind_visited_waypoint)
-        self.ind_next_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
-        self.myopic3d_planner.find_next_waypoint_using_min_eibv(self.ind_next_waypoint,
-                                                                self.ind_current_waypoint,
-                                                                self.ind_visited_waypoint)
-        self.ind_pioneer_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
+
+        lat_waypoint, lon_waypoint = VERTICES_TRANSECT[-1, :]
+        depth_waypoint = DEPTH_TOP
+        x_next, y_next = latlon2xy(lat_waypoint, lon_waypoint, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        z_next = depth_waypoint
+        self.ind_next_waypoint = get_ind_at_location3d_xyz(self.waypoints, x_next, y_next, z_next)
+        # self.myopic3d_planner.update_planner(knowledge=self.knowledge, gmrf_model=self.gmrf_model)
+        # self.myopic3d_planner.find_next_waypoint_using_min_eibv(self.ind_current_waypoint,
+        #                                                         self.ind_previous_waypoint,
+        #                                                         self.ind_visited_waypoint)
+        # self.ind_next_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
+
+        # self.myopic3d_planner.find_next_waypoint_using_min_eibv(self.ind_next_waypoint,
+        #                                                         self.ind_current_waypoint,
+        #                                                         self.ind_visited_waypoint)
+        # self.ind_pioneer_waypoint = int(np.loadtxt(FILEPATH + "Waypoint/ind_next.txt"))
         print("Finished 2-step planning!!!")
 
         t_start = time.time()
