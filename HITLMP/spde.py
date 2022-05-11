@@ -2,7 +2,7 @@ import numpy as np
 from scipy import sparse
 from sksparse.cholmod import cholesky
 from Config.Config import FILEPATH
-DEFAULT_NUM_SAMPLES = 60 # 150 is too much
+DEFAULT_NUM_SAMPLES = 50 # 150 is too much
 
 
 class spde:
