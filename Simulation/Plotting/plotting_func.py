@@ -105,7 +105,7 @@ def plotf_budget_radar(centre, radius):
 def plotf_trajectory(trajectory):
     path = []
     for location in trajectory:
-        path.append([location.lon, location.lat])
+        path.append([location.lon_auv, location.lat_auv])
     path = np.array(path)
     plt.plot(path[:, 0], path[:, 1], 'k.-')
     plt.plot(path[:, 0], path[:, 1], 'k-')
