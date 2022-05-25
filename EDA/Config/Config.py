@@ -36,3 +36,6 @@ xbox, ybox = latlon2xy(LAT_BOX, LON_BOX, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
 ROTATED_ANGLE = np.math.atan2(xbox[1] - xbox[0], ybox[1] - ybox[0])
 # ==
 
+# == Which depth CTD data needs to be discard
+MIN_DEPTH_FOR_DATA_ASSIMILATION = .25
+

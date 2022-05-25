@@ -132,10 +132,10 @@ class KnowledgePlot:
         )
 
         trajectory = []
-        for i in range(len(self.knowledge.trajectory)):
-            trajectory.append([self.knowledge.trajectory[i].Y_START,
-                               self.knowledge.trajectory[i].X_START,
-                               self.knowledge.trajectory[i].Z_START])
+        for i in range(len(self.knowledge.trajectory_plot)):
+            trajectory.append([self.knowledge.trajectory_plot[i].Y_START,
+                               self.knowledge.trajectory_plot[i].X_START,
+                               self.knowledge.trajectory_plot[i].Z_START])
 
         if trajectory:
             trajectory = np.array(trajectory)
