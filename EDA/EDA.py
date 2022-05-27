@@ -5,12 +5,14 @@ Contact: yaolin.ge@ntnu.no
 Date: 2022-05-13
 """
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from usr_func import *
 from MAFIA.EDA.Config.Config import *
 from DataHandler.SINMOD import SINMOD
 from MAFIA.EDA.spde import spde
 from MAFIA.EDA.Knowledge.Knowledge import Knowledge
+
 from skgstat import Variogram
 
 
@@ -18,6 +20,7 @@ from skgstat import Variogram
 DATAPATH = "/Users/yaolin/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/20220511/MAFIA/"
 SINMODPATH = "/Users/yaolin/HomeOffice/MAFIA/Experiments/20220511/"
 FIGPATH = "/Users/yaolin/HomeOffice/MAFIA/fig/Experiments/20220511/"
+RAW_SINMODPATH = "/Users/yaolin/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/SINMOD_DATA/samples_2022.05.11.nc"
 # AUV_TIMESTEP = 170
 # == Set up
 LAT_START = 63.456232
@@ -36,11 +39,20 @@ def get_ep(mu, sigma, threshold):
 class EDA:
 
     def __init__(self):
+        self.load_polygons()
         self.load_gmrf_grid()
         self.load_gmrf_model()
         self.update_knowledge()
         self.load_threshold()
         self.load_auv_data()
+
+    def load_polygons(self):
+        self.polygon_border = pd.read_csv(FILEPATH + "Config/polygon_border.csv").to_numpy()
+        self.polygon_obstacle = pd.read_csv(FILEPATH + "Config/polygon_obstacle.csv").to_numpy()
+        self.polygon_border_shapely = Polygon(self.polygon_border)
+        self.polygon_obstacle_shapely = Polygon(self.polygon_obstacle)
+        print("E1: polygons are loaded successfully!")
+        pass
 
     def load_gmrf_grid(self):
         self.gmrf_grid = pd.read_csv(FILEPATH + "Config/GMRFGrid.csv").to_numpy()
@@ -137,15 +149,142 @@ class EDA:
         plotly.offline.plot(fig, filename=FIGPATH + "adaptive.html", auto_open=True)
 
     def plot_sinmod(self):
-        fig = go.Figure(data=go.Scatter3d(
-            x=self.lon_auv,
-            y=self.lat_auv,
-            z=-self.depth_auv,
-            mode='markers',
-            marker=dict(color=self.data_sinmod[:, 3], size=10)
-        ))
-        plotly.offline.plot(fig, filename=FIGPATH + "sinmod_on_auv_trajectory.html", auto_open=True)
+        file = RAW_SINMODPATH
+        ind_before = re.search("samples_", file)
+        ind_after = re.search(".nc", file)
+        self.date_string = file[ind_before.end():ind_after.start()]
+        print(self.date_string)
+        ref_timestamp = datetime.strptime(self.date_string, "%Y.%m.%d").timestamp()
+        self.sinmod_raw = netCDF4.Dataset(RAW_SINMODPATH)
+        self.timestamp = np.array(self.sinmod_raw["time"]) * 24 * 3600 + ref_timestamp  # change ref timestamp
+        self.lat_sinmod = np.array(self.sinmod_raw['gridLats'])
+        self.lon_sinmod = np.array(self.sinmod_raw['gridLons'])
+        self.depth_sinmod = np.array(self.sinmod_raw['zc'])
+        self.salinity_sinmod = np.array(self.sinmod_raw['salinity'])
+
+        xsinmod, ysinmod = latlon2xy(self.lat_sinmod, self.lon_sinmod, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        xrot = xsinmod * np.cos(ROTATED_ANGLE) - ysinmod * np.sin(ROTATED_ANGLE)
+        yrot = xsinmod * np.sin(ROTATED_ANGLE) + ysinmod * np.cos(ROTATED_ANGLE)
+        self.grid_plot = []
+        self.sal_plot = []
+        self.ind_illegal = np.zeros([xrot.shape[0] * xrot.shape[1] * 10, 1])
+
+        counter = 0
+        for i in range(10):
+            for j in range(xrot.shape[0]):
+                for k in range(xrot.shape[1]):
+                    if not self.is_location_legal(xsinmod[j, k], ysinmod[j, k]):
+                        self.ind_illegal[counter] = True
+                    counter += 1
+                    self.grid_plot.append([yrot[j, k], xrot[j, k], -self.depth_sinmod[i]])
+
+        for t in range(self.salinity_sinmod.shape[0]):
+            temp = []
+            for i in range(10):
+                for j in range(xrot.shape[0]):
+                    for k in range(xrot.shape[1]):
+                        temp.append(self.salinity_sinmod[t, i, j, k])
+            self.sal_plot.append([temp])
+
+        # for i in range(self.salinity_sinmod.shape[0]):
+        #
+        #     points_int, values_int = interpolate_3d(, self.yplot, self.zplot, value)
+        #     fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+        #
+        #     fig.add_trace(go.Volume(
+        #         x=points_int[:, 0],
+        #         y=points_int[:, 1],
+        #         z=points_int[:, 2],
+        #         value=values_int.flatten(),
+        #         isomin=vmin,
+        #         isomax=vmax,
+        #         opacity=opacity,
+        #         surface_count=surface_count,
+        #         coloraxis="coloraxis",
+        #         caps=dict(x_show=False, y_show=False, z_show=False),
+        #     ),
+        #         row=1, col=1
+        #     )
+        #
+        #     try:
+        #         trjp = np.array(self.sampling_location_plot)
+        #         fig.add_trace(go.Scatter3d(
+        #             x=trjp[:, 0],
+        #             y=trjp[:, 1],
+        #             z=trjp[:, 2],
+        #             mode='markers',
+        #             marker=dict(
+        #                 size=5,
+        #                 color='yellow',
+        #                 opacity=.6,
+        #             ),
+        #         ),
+        #             row=1, col=1
+        #         )
+        #     except:
+        #         pass
+        #
+        #     try:
+        #         trjp = np.array(self.trajectory_plot)
+        #         fig.add_trace(go.Scatter3d(
+        #             x=trjp[:, 0],
+        #             y=trjp[:, 1],
+        #             z=trjp[:, 2],
+        #             mode='lines',
+        #             line=dict(
+        #                 width=1,
+        #                 color='black',
+        #             ),
+        #         ),
+        #             row=1, col=1
+        #         )
+        #     except:
+        #         pass
+        #
+        #     fig.update_coloraxes(colorscale=cmap, colorbar=dict(lenmode='fraction', len=.5, thickness=20,
+        #                                                         tickfont=dict(size=18, family="Times New Roman"),
+        #                                                         title=cbar_title,
+        #                                                         titlefont=dict(size=18, family="Times New Roman")),
+        #                          colorbar_x=.95)
+        #     camera = dict(
+        #         up=dict(x=0, y=0, z=1),
+        #         center=dict(x=0, y=0, z=0),
+        #         eye=dict(x=-1.25, y=0, z=.5)
+        #     )
+        #     fig.update_layout(
+        #         title={
+        #             'text': "Adaptive 3D myopic illustration",
+        #             'y': 0.9,
+        #             'x': 0.5,
+        #             'xanchor': 'center',
+        #             'yanchor': 'top',
+        #             'font': dict(size=30, family="Times New Roman"),
+        #         },
+        #         scene=dict(
+        #             xaxis=dict(range=[np.amin(points_int[:, 0]), np.amax(points_int[:, 0])]),
+        #             yaxis=dict(range=[np.amin(points_int[:, 1]), np.amax(points_int[:, 1])]),
+        #             zaxis=dict(nticks=4, range=[-6, .5], ),
+        #             xaxis_tickfont=dict(size=14, family="Times New Roman"),
+        #             yaxis_tickfont=dict(size=14, family="Times New Roman"),
+        #             zaxis_tickfont=dict(size=14, family="Times New Roman"),
+        #             xaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+        #             yaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+        #             zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
+        #         ),
+        #         scene_aspectmode='manual',
+        #         scene_aspectratio=dict(x=1, y=1, z=.4),
+        #         scene_camera=camera,
+        #     )
+        #     # plotly.offline.plot(fig, filename=FIGPATH + "myopic3d/P_{:03d}.html".format(i), auto_open=False)
+        #     fig.write_image(filename, width=1980, height=1080)
         pass
+
+    def is_location_legal(self, x, y):
+        point = Point(x, y)
+        islegal = True
+        if self.polygon_obstacle_shapely.contains(point) or not self.polygon_border_shapely.contains(point):
+            islegal = False
+        return islegal
 
     def plot_prior(self):
         # == plot gmrf section
@@ -365,6 +504,22 @@ class EDA:
         print("Reset auv_data: ", self.auv_data)
         return ind_assimilated, vectorise(salinity_assimilated)
 
+    def plot_variogram(self):
+        self.load_sinmod_data(data_exists=True)
+        fig = go.Figure(data=[go.Scatter3d(
+            x=self.lon_auv,
+            y=self.lat_auv,
+            z=-self.,
+            mode='markers',
+            marker=dict(
+                size=12,
+                color=values_es,                # set color to an array/list of desired values
+                colorscale='Viridis',   # choose a colorscale
+                opacity=0.8
+            )
+        )])
+        pass
+
 
 if __name__ == "__main__":
     e = EDA()
@@ -372,89 +527,25 @@ if __name__ == "__main__":
     # e.plot_scatter_data()
     # e.plot_sinmod()
     # e.plot_prior()
-    e.plot_recap_mission()
+    # e.plot_recap_mission()
     # e.plot_time_series()
-    # e.plot_variogram()
-
-
- #%%
-# plt.scatter(e.grf_grid[:, 1], e.grf_grid[:, 0], c=e.grfar_model.mu_prior, cmap=get_cmap("BrBG", 10), vmin=10, vmax=27)
-# plt.colorbar()
-# plt.plot(LON_START, LAT_START, 'rs')
-# plt.show()
-
+    e.plot_variogram()
 
 
 
 #%%
+g = np.array(e.grid_plot)
+t = np.array(e.sal_plot)
+ind_il = np.where(e.ind_illegal == 1)[0]
 
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import torch
-import plotly
-import netCDF4
-from datetime import datetime
-from matplotlib.cm import get_cmap
-import re
-
-LATITUDE_ORIGIN = 63.4269097
-LONGITUDE_ORIGIN = 10.3969375
-CIRCUMFERENCE = 40075000 # [m], circumference
-circumference = CIRCUMFERENCE
-def latlon2xy(lat, lon, lat_origin, lon_origin):
-    x = np.deg2rad((lat - lat_origin)) / 2 / np.pi * CIRCUMFERENCE
-    y = np.deg2rad((lon - lon_origin)) / 2 / np.pi * CIRCUMFERENCE * np.cos(np.deg2rad(lat))
-    return x, y
-
-file = "/Users/yaolin/Library/CloudStorage/OneDrive-NTNU/MASCOT_PhD/Data/Nidelva/SINMOD_DATA/samples_2022.05.11.nc"
-FIGPATH = "/Users/yaolin/HomeOffice/GOOGLE/Experiments/20220511/fig/"
-# file = "/Users/yaolin/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/SINMOD_DATA/samples_2022.05.10.nc"
-# figpath = "/Users/yaolin/HomeOffice/GOOGLE/Experiments/20220509/fig/"
-
-sinmod = netCDF4.Dataset(file)
-ind_before = re.search("samples_", file)
-ind_after = re.search(".nc", file)
-date_string = file[ind_before.end():ind_after.start()]
-ref_timestamp = datetime.strptime(date_string, "%Y.%m.%d").timestamp()
-timestamp = np.array(sinmod["time"]) * 24 * 3600 + ref_timestamp #change ref timestamp
-lat_sinmod = np.array(sinmod['gridLats'])
-lon_sinmod = np.array(sinmod['gridLons'])
-depth_sinmod = np.array(sinmod['zc'])
-salinity_sinmod = np.array(sinmod['salinity'])
-
-# for i in range(salinity_sinmod.shape[0]):
-#     print(i)
-#     plt.figure(figsize=(12, 10))
-#     plt.scatter(lon_sinmod, lat_sinmod, c=salinity_sinmod[i, 0, :, :], cmap=get_cmap("BrBG", 8), vmin=10, vmax=self.CV.threshold)
-#     plt.xlabel("Lon [deg]")
-#     plt.ylabel("Lat [deg]")
-#     plt.title("SINMOD Surface Salinity Estimation on " + datetime.fromtimestamp(timestamp[i]).strftime("%H:%M, %Y-%m-%d"))
-#     plt.colorbar()
-#     plt.savefig(figpath+"sinmod/P_{:03d}.jpg".format(i))
-#     plt.close("all")
+t[:, 0, ind_il] = 0
 
 #%%
-lat_grid, lon_grid = xy2latlon(e.grf_grid[:, 0], e.grf_grid[:, 1], LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
-sal_mean = np.mean(salinity_sinmod[:, 0, :, :], axis=0)
-# plt.figure(figsize=(12, 10))
-# plt.scatter(lon_sinmod, lat_sinmod, c=sal_mean, cmap=get_cmap("BrBG", 8), vmin=10, vmax=30)
-# plt.xlabel("Lon [deg]")
-# plt.ylabel("Lat [deg]")
-# plt.show()
 
-plt.scatter(lon_grid, lat_grid, c=e.grfar_model.mu_sinmod, cmap=get_cmap("BrBG", 8), vmin=10, vmax=30)
-# plt.plot(lon_grid, lat_grid, 'y.', alpha=.3)
-plt.colorbar()
-plt.title("SINMOD")
-# plt.savefig(figpath+"sinmod_grid.jpg")
-plt.show()
-
-#%%
 import plotly.graph_objects as go
 import numpy as np
 
-point_es, values_es = interpolate_3d(e.xplot, e.yplot, e.zplot, e.ep_plot)
+point_es, values_es = interpolate_3d(g[:, 0], g[:, 1], g[:, 2], t[0, 0, :], refill_nan=True)
 # point_es = e.points_es
 # values_es = e.values_es
 
@@ -462,11 +553,10 @@ vmin = None
 vmax = None
 opacity = None
 surface_count = None
-vmin = 0
-vmax = 1
+vmin = 10
+vmax = 30
 opacity = .4
-surface_count = 10
-
+surface_count = 4
 
 fig = go.Figure(data=[go.Volume(
     x=point_es[:, 0],
@@ -494,7 +584,7 @@ fig = go.Figure(data=[go.Volume(
 #     )
 # )])
 
-fig.update_coloraxes(colorscale="Brwnyl", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
+fig.update_coloraxes(colorscale="Blues", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
                                                       tickfont=dict(size=18, family="Times New Roman"),
                                                       title="EP",
                                                       titlefont=dict(size=18, family="Times New Roman")),
@@ -527,51 +617,89 @@ fig.update_layout(
     scene_camera=camera,
 )
 
-plotly.offline.plot(fig, filename=FIGPATH + "ep.html", auto_open=True)
+plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
 
 #%%
-self = e
-# format your data to desired format. Here I chose YYYY-MM-DD but you can set it to whatever you want.
-import matplotlib.dates as mdates
-
-tf = np.vectorize(datetime.fromtimestamp)
-tid = tf(self.timestamp_auv)
-# tid_str = []
-# for i in range(len(tid)):
-#     tid_str.append(datetime.strftime(tid[i], "%H:%M"))
-tid_str = tid
-
-fig = plt.figure(figsize=(20, 15))
-gs = GridSpec(nrows=3, ncols=1)
-ax = fig.add_subplot(gs[0])
-ax.plot(tid_str, self.depth_auv, 'k-')
-ax.set_xlim([tid_str[0], tid_str[-1]])
-ax.set_ylabel("Depth [m]")
-ax.set_title("2022-05-11 MAFIA timeseries data")
-ax.grid()
-
-ax = fig.add_subplot(gs[1])
-ax.plot(tid_str, self.salinity_auv, 'k-')
-ax.set_xlim([tid_str[0], tid_str[-1]])
-ax.set_ylabel("Salinity [psu]")
-ax.grid()
-
-ax = fig.add_subplot(gs[2])
-ax.plot(tid_str, self.temperature_auv, 'k-')
-ax.set_xlim([tid_str[0], tid_str[-1]])
-ax.set_ylabel("Temperature [deg]")
-ax.set_xlabel("Time")
-ax.grid()
-# rotate and align the tick labels so they look better
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-fig.autofmt_xdate()
-plt.savefig(FIGPATH + "Timeseries_20220511_MAFIA.pdf")
-plt.show()
+grid_data = []
+for i in range(e.salinity_sinmod.shape[2]):
+    for j in range(e.salinity_sinmod.shape[3]):
+        for k in range(e.salinity_sinmod.shape[1]):
+            grid_data.append([e.lat_sinmod[i, j], e.lon_sinmod[i, j], e.depth_sinmod[k], e.salinity_sinmod[0, k, i, j]])
+gd = np.array(grid_data)
 
 #%%
-tid = tf(self.timestamp_auv)
-tid_str = []
-for i in range(len(tid)):
-    tid_str.append(datetime.strftime(tid[i], "%H:%M"))
 
-print(tid_str)
+vmin = None
+vmax = None
+opacity = None
+surface_count = None
+vmin = 0
+vmax = 30
+opacity = .4
+surface_count = 4
+
+# fig = go.Figure(data=[go.Volume(
+#     x=gd[:, 1],
+#     y=gd[:, 0],
+#     z=-gd[:, 2],
+#     value=gd[:, 3],
+#     isomin=vmin,
+#     isomax=vmax,
+#     opacity=opacity,
+#     surface_count=surface_count,
+#     coloraxis="coloraxis",
+#     caps=dict(x_show=False, y_show=False, z_show=False),
+# )])
+
+fig = go.Figure(data=[go.Scatter3d(
+    x=point_es[:, 0],
+    y=point_es[:, 1],
+    z=point_es[:, 2],
+    mode='markers',
+    marker=dict(
+        size=12,
+        color=values_es,                # set color to an array/list of desired values
+        colorscale='Viridis',   # choose a colorscale
+        opacity=0.8,
+        cmin=vmin,
+        cmax=vmax,
+        showscale=True,
+    )
+)])
+
+fig.update_coloraxes(colorscale="Blues", colorbar=dict(lenmode='fraction', len=.5, thickness=20,
+                                                      tickfont=dict(size=18, family="Times New Roman"),
+                                                      title="EP",
+                                                      titlefont=dict(size=18, family="Times New Roman")),
+                     colorbar_x=.95)
+camera = dict(
+    up=dict(x=0, y=0, z=1),
+    center=dict(x=0, y=0, z=0),
+    eye=dict(x=-1.25, y=0, z=.5)
+)
+fig.update_layout(
+    title={
+        'text': "Adaptive 3D myopic illustration",
+        'y': 0.9,
+        'x': 0.5,
+        'xanchor': 'center',
+        'yanchor': 'top',
+        'font': dict(size=30, family="Times New Roman"),
+    },
+    scene=dict(
+        zaxis=dict(nticks=4, range=[-6, .5], ),
+        xaxis_tickfont=dict(size=14, family="Times New Roman"),
+        yaxis_tickfont=dict(size=14, family="Times New Roman"),
+        zaxis_tickfont=dict(size=14, family="Times New Roman"),
+        xaxis_title=dict(text="Y", font=dict(size=18, family="Times New Roman")),
+        yaxis_title=dict(text="X", font=dict(size=18, family="Times New Roman")),
+        zaxis_title=dict(text="Z", font=dict(size=18, family="Times New Roman")),
+    ),
+    scene_aspectmode='manual',
+    scene_aspectratio=dict(x=1, y=1, z=.4),
+    scene_camera=camera,
+)
+
+plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
+
+
