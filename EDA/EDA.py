@@ -27,6 +27,8 @@ LAT_START = 63.456232
 LON_START = 10.435198
 IND_END_PRERUN = 1850
 AUV_TIMESTEP = 170
+VMIN = 10
+VMAX = 33
 
 
 @vectorize(['float32(float32, float32, float32)'])
@@ -81,7 +83,7 @@ class EDA:
         self.temperature_auv = self.data_auv[:, 5]
         print("AUV data is loaded successfully!")
 
-    def load_sinmod_data(self, data_exists=True):
+    def load_sinmod_data_along_auv_path(self, data_exists=True):
         if not data_exists:
             self.sinmod = SINMOD()
             self.sinmod.load_sinmod_data(raw_data=True)
@@ -147,6 +149,60 @@ class EDA:
             marker=dict(color=self.data_auv[IND_END_PRERUN:, 3], size=10)
         ))
         plotly.offline.plot(fig, filename=FIGPATH + "adaptive.html", auto_open=True)
+
+    def plot_sinmod_layer(self):
+        file = RAW_SINMODPATH
+        ind_before = re.search("samples_", file)
+        ind_after = re.search(".nc", file)
+        self.date_string = file[ind_before.end():ind_after.start()]
+        print(self.date_string)
+        ref_timestamp = datetime.strptime(self.date_string, "%Y.%m.%d").timestamp()
+        self.sinmod_raw = netCDF4.Dataset(RAW_SINMODPATH)
+        self.timestamp = np.array(self.sinmod_raw["time"]) * 24 * 3600 + ref_timestamp  # change ref timestamp
+        self.lat_sinmod = np.array(self.sinmod_raw['gridLats'])
+        self.lon_sinmod = np.array(self.sinmod_raw['gridLons'])
+        self.depth_sinmod = np.array(self.sinmod_raw['zc'])
+        self.salinity_sinmod = np.array(self.sinmod_raw['salinity'])
+
+        # xsinmod, ysinmod = latlon2xy(self.lat_sinmod, self.lon_sinmod, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        # xrot = xsinmod * np.cos(ROTATED_ANGLE) - ysinmod * np.sin(ROTATED_ANGLE)
+        # yrot = xsinmod * np.sin(ROTATED_ANGLE) + ysinmod * np.cos(ROTATED_ANGLE)
+        # self.grid_plot = []
+        # self.sal_plot = []
+        # self.ind_illegal = np.zeros([xrot.shape[0] * xrot.shape[1] * 10, 1])
+
+        for j in range(self.salinity_sinmod.shape[0]):
+            print(j)
+            fig = plt.figure(figsize=(35, 15))
+            gs = GridSpec(nrows=2, ncols=5)
+            for i in range(10):
+                ax = fig.add_subplot(gs[i])
+                # im = ax.scatter(self.lon_sinmod, self.lat_sinmod, c=self.salinity_sinmod[0, i, :, :], cmap=get_cmap("BrBG", 10),
+                #            vmin=10, vmax=30)
+                sal = self.salinity_sinmod[j, i, :, :]
+                levels = np.arange(VMIN, VMAX)
+                plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
+                CS = plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[e.threshold.item()], colors=('r',), linestyles=('-',),
+                                 linewidths=(2,))
+                plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[0], colors=('w',), linestyles=('-',), linewidths=(2,))
+                plt.contourf(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
+                plt.plot(self.polygon_border[:, 1], self.polygon_border[:, 0], 'k-', linewidth=2)
+                plt.plot(self.polygon_obstacle[:, 1], self.polygon_obstacle[:, 0], 'k-', linewidth=2)
+                # plt.colorbar()
+                plt.ylim([np.amin(self.polygon_border[:, 0]), np.amax(self.polygon_border[:, 0])])
+                ax.set_title("Salinity field at {:.1f}m".format(self.depth_sinmod[i]))
+                if (i+1) % 5 == 0:
+                    plt.colorbar()
+                if i >= 5:
+                    ax.set_xlabel("Longitude [deg]")
+                if i == 0 or i == 5:
+                    ax.set_ylabel("Latitude [deg]")
+            plt.suptitle("Salinity field on " + datetime.fromtimestamp(e.timestamp[j]).strftime("%Y-%m-%d, %H:%M"))
+            plt.savefig(FIGPATH + "SINMOD/P_{:03d}.jpg".format(j))
+            plt.close("all")
+        # plt.show()
+        os.system("say finished")
+        pass
 
     def plot_sinmod(self):
         file = RAW_SINMODPATH
@@ -505,11 +561,11 @@ class EDA:
         return ind_assimilated, vectorise(salinity_assimilated)
 
     def plot_variogram(self):
-        self.load_sinmod_data(data_exists=True)
+        self.load_sinmod_data_along_auv_path(data_exists=True)
         fig = go.Figure(data=[go.Scatter3d(
             x=self.lon_auv,
             y=self.lat_auv,
-            z=-self.,
+            z=-self.depth_auv,
             mode='markers',
             marker=dict(
                 size=12,
@@ -529,9 +585,32 @@ if __name__ == "__main__":
     # e.plot_prior()
     # e.plot_recap_mission()
     # e.plot_time_series()
-    e.plot_variogram()
+    # e.plot_variogram()
+    e.plot_sinmod_layer()
 
+#%%
+# plt.scatter(e.lon_sinmod, e.lat_sinmod, c=e.salinity_sinmod[0, 0, :, :], cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)
+lat = e.lat_sinmod
+lon = e.lon_sinmod
+sal = e.salinity_sinmod[0, 0, :, :]
 
+# sal[sal<10] = 0
+levels = np.arange(15, 33)
+plt.contour(e.lon_sinmod, e.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)
+CS = plt.contour(e.lon_sinmod, e.lat_sinmod, sal, levels=[26.8], colors=('red', ), linestyles=('-',), linewidths=(2,))
+CS.collections[0].set_label("Threshold=26.8")
+plt.contour(e.lon_sinmod, e.lat_sinmod, sal, levels=[0], colors=('w', ), linestyles=('-',), linewidths=(2,))
+plt.contourf(e.lon_sinmod, e.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)
+# plt.gca().clabel(CS, inline=True, fontsize=10)
+plt.plot(e.polygon_border[:, 1], e.polygon_border[:, 0], 'k-', linewidth=2)
+plt.plot(e.polygon_obstacle[:, 1], e.polygon_obstacle[:, 0], 'k-', linewidth=2)
+plt.colorbar()
+# plt.legend()
+plt.ylim([np.amin(e.polygon_border[:, 0]),np.amax(e.polygon_border[:, 0])])
+plt.title("T" + datetime.fromtimestamp(e.timestamp[0]).strftime("%Y-%m-%d, %H:%M"))
+plt.show()
+print("f")
+os.system('say finished')
 
 #%%
 g = np.array(e.grid_plot)
@@ -703,3 +782,27 @@ fig.update_layout(
 plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
 
 
+
+#%%
+
+
+
+self = e
+def is_location_valid(lat, lon):
+    isvalid = 1
+    point = Point(lat, lon)
+    if self.polygon_obstacle_shapely.contains(point) or not self.polygon_border_shapely.contains(point):
+        isvalid = 0
+    return isvalid
+
+valid_matrix = np.ones_like(lat)
+for i in range(valid_matrix.shape[0]):
+    for j in range(valid_matrix.shape[1]):
+        valid_matrix[i, j] = is_location_valid(lat[i, j], lon[i, j])
+
+#%%
+ind_row = np.where(valid_matrix == True)[0]
+ind_col = np.where(valid_matrix == True)[1]
+
+#%%
+plt.contour(e.lon_sinmod[ind_row, ind_col], e.lat_sinmod[ind_row, ind_col], sal[ind_row, ind_col], levels=levels, cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)

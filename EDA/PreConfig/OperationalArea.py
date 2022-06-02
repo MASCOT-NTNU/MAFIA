@@ -6,129 +6,163 @@ Date: 2022-02-23
 """
 
 import geopandas
+import pandas as pd
+
 from usr_func import *
-from MAFIA.Simulation.Config.Config import *
-BUFFER_SIZE_BORDER = -100 # [m]
-BUFFER_SIZE_MUNKHOLMEN = 50 # [m]
+from MAFIA.EDA.Config.Config import FILEPATH, LATITUDE_ORIGIN, LONGITUDE_ORIGIN
+from rdp import rdp # used to smooth path
+BUFFER_SIZE_BORDER = -0 # [m]
+BUFFER_SIZE_MUNKHOLMEN = 0 # [m]
 
 '''
 Path
 '''
-PATH_SHAPE_FILE = FILEPATH + "GIS/Munkholmen.shp" # remember to copy all the
-# other files in as well
-BOUNDARY_SHAPE_FILE = FILEPATH + "GIS/boundary.csv"
-
-PATH_OPERATION_AREA = FILEPATH + "Simulation/Config/OperationalArea.csv"
-# PATH_MUNKHOLMEN = FILEPATH + "Munkholmen.csv"
-
-''' Note!!!
-Sometimes the geometry will have multiple polygons due to merging of different parts as the result of the buffer size
-Be careful with the check conditions
-'''
-
-boundary = np.load(FILEPATH+"models/grid.npy")
-boundary[[2, -1]] = boundary[[-1, 2]]
-
-df = pd.DataFrame(boundary[:, 2:], columns=['lat', 'lon'])
-df.to_csv(FILEPATH+"GIS/boundary.csv", index=False)
+INPUT_PATH_MUNKHOLMEN_SHAPE_FILE = FILEPATH + "../GIS/Munkholmen.shp"
+INPUT_PATH_SINMOD_SHAPE_FILE = FILEPATH + "PreConfig/SINMOD_Data_Region.csv"
+INPUT_PATH_MUNKHOLMEN_POLYGON_FILE = FILEPATH + "../GIS/Munkholmen.csv"
+OUTPUT_PATH_BORDER = FILEPATH + "PreConfig/polygon_border.csv"
+OUTPUT_PATH_MUNKHOLMEN = FILEPATH + "PreConfig/polygon_munkholmen.csv"
+OUTPUT_PATH_POLYGON_BORDER = FILEPATH + "Config/polygon_border.csv"
+OUTPUT_PATH_POLYGON_OBSTACLE = FILEPATH + "Config/polygon_obstacle.csv"
 
 
 class OpArea:
 
     def __init__(self):
         self.get_operational_area()
-        # self.save_operational_areas()
         pass
 
-    def get_operational_area(self):
-        self.munkholmen_shape_file = geopandas.read_file(PATH_SHAPE_FILE)
-        self.boundary_shape_file = np.fliplr(pd.read_csv(BOUNDARY_SHAPE_FILE)) # swap x & y
-        self.polygon_path_boundary = Polygon(self.boundary_shape_file)
+    def get_operational_area(self): # get operational area from shape files in QGIS, it is only executed once
+        self.munkholmen_shape_file = geopandas.read_file(INPUT_PATH_MUNKHOLMEN_SHAPE_FILE)
+        self.sinmod_shape_file = np.fliplr(pd.read_csv(INPUT_PATH_SINMOD_SHAPE_FILE))
+        self.polygon_sinmod = Polygon(self.sinmod_shape_file)
 
-        # get big border polygon
         self.Trondheimsfjord = self.munkholmen_shape_file[self.munkholmen_shape_file['name'] == "Trondheimsfjorden"]['geometry']
-        self.polygon_path_trondheimsfjorden = self.Trondheimsfjord.to_numpy()[0][0]
-        self.lon_fjord = vectorise(self.polygon_path_trondheimsfjorden.exterior.xy[0])
-        self.lat_fjord = vectorise(self.polygon_path_trondheimsfjorden.exterior.xy[1])
-        self.polygon_fjord = np.hstack((self.lat_fjord, self.lon_fjord))
-        self.polygon_fjord_buffered = self.get_buffered_polygon(self.polygon_fjord, BUFFER_SIZE_BORDER,
-                                                                which_polygon=1, plot=False)
-        # plt.plot(self.polygon_fjord[:, 1], self.polygon_fjord[:, 0], 'k-')
-        # plt.plot(self.polygon_fjord_buffered[:, 1], self.polygon_fjord_buffered[:, 0], 'b-')
-        # plt.show()
+        self.polygon_trondheimsfjorden = self.Trondheimsfjord.to_numpy()[0][0]
+        self.lon_fjord = np.array(self.polygon_trondheimsfjorden.exterior.xy[0])
+        self.lat_fjord = np.array(self.polygon_trondheimsfjorden.exterior.xy[1])
 
-        # get munkholmen obstacle polygon
-        # self.Munkholmen = self.munkholmen_shape_file[self.munkholmen_shape_file['name'] == "Munkholmen"]['geometry']
-        # self.polygon_path_munkholmen = self.Munkholmen.to_numpy()[0]
-        # self.lon_munkholmen = vectorise(self.polygon_path_munkholmen.exterior.xy[0])
-        # self.lat_munkholmen = vectorise(self.polygon_path_munkholmen.exterior.xy[1])
-        # self.polygon_munkholmen = np.hstack((self.lat_munkholmen, self.lon_munkholmen))
-
+        self.Munkholmen = self.munkholmen_shape_file[self.munkholmen_shape_file['name'] == "Munkholmen"]['geometry']
+        self.polygon_munkholmen = self.Munkholmen.to_numpy()[0]
+        self.lon_munkholmen = np.array(self.polygon_munkholmen.exterior.xy[0])
+        self.lat_munkholmen = np.array(self.polygon_munkholmen.exterior.xy[1])
 
         self.intersection = []
-        self.intersection.append(self.get_intersected_polygons(Polygon(np.fliplr(self.polygon_fjord_buffered)),
-                                                               self.polygon_path_boundary))
-        # # self.intersection.append(self.get_intersected_polygons(self.polygon_path_trondheimsfjorden,
-        # #                                                        self.polygon_path_munkholmen))
+        self.intersection.append(self.polygon_trondheimsfjorden.intersection(self.polygon_sinmod))
+        self.intersection.append(self.polygon_trondheimsfjorden.intersection(self.polygon_munkholmen))
 
         self.operational_regions = GeometryCollection(self.intersection)
         self.operational_areas = self.operational_regions.geoms
-        self.lon_operational_area = vectorise(self.operational_areas[0].exterior.xy[0])
-        self.lat_operational_area = vectorise(self.operational_areas[0].exterior.xy[1])
-        self.polygon_operational_area = np.hstack((self.lat_operational_area, self.lon_operational_area))
 
         fig = plt.figure(figsize=(10, 10))
-        plt.plot(self.lon_operational_area, self.lat_operational_area, 'k-.', linewidth=2)
-        plt.plot(self.boundary_shape_file[:, 0], self.boundary_shape_file[:, 1], 'r-')
+
+        lon_operational_area = np.array(self.operational_areas[0].exterior.xy[0])
+        lat_operational_area = np.array(self.operational_areas[0].exterior.xy[1])
+        plt.plot(lon_operational_area, lat_operational_area, 'k-.', markersize=500)
+
+        for i in range(len(self.operational_areas[1].geoms)):
+            lon_operational_area = np.array(self.operational_areas[1].geoms[i].coords)[:, 0]
+            lat_operational_area = np.array(self.operational_areas[1].geoms[i].coords)[:, 1]
+            plt.plot(lon_operational_area, lat_operational_area, 'k-.', markersize=500)
+
+        # # plt.plot(sinmod_region['lon'], sinmod_region['lat'], 'r-', ms=12)
+        # plt.scatter(sinmod.lon, sinmod.lat, c=sinmod.salinity_average[0, :, :], cmap="Paired", vmin=0, vmax=33)
+        # plt.colorbar()
+        # # plt.plot(lon_munk, lat_munk, 'k-')
+        plt.show()
+        pass
+
+    def get_polygons(self):
+        self.get_buffered_area()
+
+    def get_buffered_area(self): # get buffered area, can be changed everytime
+        lon_operational_area = vectorise(self.operational_areas[0].exterior.xy[0])
+        lat_operational_area = vectorise(self.operational_areas[0].exterior.xy[1])
+        polygon_border = np.hstack((lat_operational_area, lon_operational_area))
+        polygon_obstacle = np.hstack((vectorise(self.lat_munkholmen), vectorise(self.lon_munkholmen)))
+
+        # == buffer obstacle
+        polygon_wgs_obstacle_shorten = self.get_buffered_polygon(polygon_obstacle, BUFFER_SIZE_MUNKHOLMEN)
+        polygon_wgs_border_shorten = self.get_buffered_polygon(polygon_border, BUFFER_SIZE_BORDER)
+
+        print("Before, ", polygon_border.shape, polygon_obstacle.shape)
+        print("After: ", polygon_wgs_border_shorten.shape, polygon_wgs_obstacle_shorten.shape)
+        x, y = latlon2xy(polygon_wgs_obstacle_shorten[:, 0], polygon_wgs_obstacle_shorten[:, 1],
+                         LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        x, y = map(vectorise, [x, y])
+        df = pd.DataFrame(np.hstack((x, y)), columns=["x", "y"])
+        df.to_csv(OUTPUT_PATH_POLYGON_OBSTACLE, index=False)
+        plt.plot(y, x, 'r.-')
         plt.show()
 
-        df = pd.DataFrame(self.polygon_operational_area, columns=['lat', 'lon'])
-        df.to_csv(FILEPATH+"Simulation/PreConfig/polygon_border.csv", index=False)
+        # polygon_selected = polygon_wgs_border_shorten[1:-1]
+        # polygon_selected = np.append(polygon_selected, polygon_selected[0, :].reshape(1, -1), axis=0)
+        # df = pd.DataFrame(polygon_selected, columns=["lat", "lon"])
+        x, y = latlon2xy(polygon_wgs_border_shorten[:, 0], polygon_wgs_border_shorten[:, 1],
+                         LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        x, y = map(vectorise, [x, y])
+        df = pd.DataFrame(np.hstack((x, y)), columns=["x", "y"])
+        df.to_csv(OUTPUT_PATH_POLYGON_BORDER, index=False)
 
-    def get_intersected_polygons(self, polygon1, polygon2):
-        return polygon1.intersection(polygon2)
+        plt.plot(polygon_obstacle[:, 1], polygon_obstacle[:, 0], 'k-')
+        plt.plot(polygon_border[:, 1], polygon_border[:, 0], 'k-')
+        plt.plot(polygon_wgs_obstacle_shorten[:, 1], polygon_wgs_obstacle_shorten[:, 0], 'r-')
+        plt.plot(polygon_wgs_border_shorten[:, 1], polygon_wgs_border_shorten[:, 0], 'r-')
+        # plt.plot(polygon_selected[:, 1], polygon_selected[:, 0], 'r-')
+        plt.grid()
+        plt.show()
+        plt.plot(y, x, 'r.-')
+        plt.show()
 
-    def get_buffered_polygon(self, polygon, buffer_size, which_polygon=1, plot=True):
+        df = pd.DataFrame(polygon_wgs_border_shorten, columns=['lat', 'lon'])
+        # df.to_csv(FILEPATH+"Test/polygon_border.csv", index=False)
+        df.to_csv(OUTPUT_PATH_POLYGON_BORDER, index=False)
+
+        df = pd.DataFrame(polygon_wgs_obstacle_shorten, columns=['lat', 'lon'])
+        # df.to_csv(FILEPATH + "Test/polygon_obstacle.csv", index=False)
+        df.to_csv(OUTPUT_PATH_POLYGON_OBSTACLE, index=False)
+
+    def get_buffered_polygon(self, polygon, buffer_size):
         x, y = latlon2xy(polygon[:, 0], polygon[:, 1], 0, 0)
         polygon_xy = np.hstack((vectorise(x), vectorise(y)))
         polygon_xy_shapely = Polygon(polygon_xy)
         polygon_xy_shapely_buffered = polygon_xy_shapely.buffer(buffer_size)
-        if type(polygon_xy_shapely_buffered) == shapely.geometry.polygon.Polygon:
-            x_buffer, y_buffer = polygon_xy_shapely_buffered.exterior.xy
+        x_buffer, y_buffer = polygon_xy_shapely_buffered.exterior.xy
 
-            # == shorten polygons using Ramer-Douglas-Peucker Algorithm
-            # polygon_xy_buffer = np.hstack((vectorise(x_buffer), vectorise(y_buffer)))
-            # polygon_xy_buffer_shorten = rdp(polygon_xy_buffer, epsilon=epsilon)
-            # lat_wgs_shorten, lon_wgs_shorten = xy2latlon(polygon_xy_buffer_shorten[:, 0],
-            #                                              polygon_xy_buffer_shorten[:, 1],
-            #                                              0, 0)
-            lat_wgs, lon_wgs = xy2latlon(vectorise(x_buffer), vectorise(y_buffer), 0, 0)
-            polygon_wgs_buffer_shorten = np.hstack((vectorise(lat_wgs), vectorise(lon_wgs)))
-            if plot:
-                plt.plot(lon_wgs, lat_wgs, 'k.-')
-                plt.plot(polygon[:, 1], polygon[:, 0], 'r.-')
-                plt.show()
-            return polygon_wgs_buffer_shorten
-        else:
-            for i in range(len(polygon_xy_shapely_buffered)):
-                x_buffer, y_buffer = polygon_xy_shapely_buffered[i].exterior.xy
+        # == shorten obstacle
+        # polygon_xy_buffer = np.hstack((vectorise(x_buffer), vectorise(y_buffer)))
+        # polygon_xy_buffer_shorten = rdp(polygon_xy_buffer, epsilon=epsilon)
+        # lat_wgs_shorten, lon_wgs_shorten = xy2latlon(polygon_xy_buffer_shorten[:, 0],
+        #                                              polygon_xy_buffer_shorten[:, 1],
+        #                                              0, 0)
+        lat_wgs, lon_wgs = xy2latlon(vectorise(x_buffer), vectorise(y_buffer), 0, 0)
+        polygon_wgs_buffer_shorten = np.hstack((vectorise(lat_wgs), vectorise(lon_wgs)))
+        return polygon_wgs_buffer_shorten
 
-                # == shorten polygons using Ramer-Douglas-Peucker Algorithm
-                # polygon_xy_buffer = np.hstack((vectorise(x_buffer), vectorise(y_buffer)))
-                # polygon_xy_buffer_shorten = rdp(polygon_xy_buffer, epsilon=epsilon)
-                # lat_wgs_shorten, lon_wgs_shorten = xy2latlon(polygon_xy_buffer_shorten[:, 0],
-                #                                              polygon_xy_buffer_shorten[:, 1],
-                #                                              0, 0)
-                lat_wgs, lon_wgs = xy2latlon(vectorise(x_buffer), vectorise(y_buffer), 0, 0)
-                polygon_wgs_buffer_shorten = np.hstack((vectorise(lat_wgs), vectorise(lon_wgs)))
-                if plot:
-                    plt.plot(lon_wgs, lat_wgs, 'k.-')
-                    plt.plot(polygon[:, 1], polygon[:, 0], 'r.-')
-                    plt.show()
-                if i == which_polygon:
-                    return polygon_wgs_buffer_shorten
+    def save_operational_areas(self): # the one used to save xy format
+        lon_operational_area = vectorise(self.operational_areas[0].exterior.xy[0])
+        lat_operational_area = vectorise(self.operational_areas[0].exterior.xy[1])
+        OpArea = np.hstack((lat_operational_area, lon_operational_area))
+        df_OpArea = pd.DataFrame(OpArea, columns=['lat', 'lon'])
+        df_OpArea.to_csv(OUTPUT_PATH_BORDER, index=False)
+
+        OpMunkholmen = np.hstack((vectorise(self.lat_munkholmen), vectorise(self.lon_munkholmen)))
+        df_munkholmen = pd.DataFrame(OpMunkholmen, columns=['lat', 'lon'])
+        df_munkholmen.to_csv(OUTPUT_PATH_MUNKHOLMEN, index=False)
+
+    def expand_munkholmen_area(self):
+        polygon_obstacle = pd.read_csv(INPUT_PATH_MUNKHOLMEN_POLYGON_FILE).to_numpy()
+        x, y = latlon2xy(polygon_obstacle[:, 0], polygon_obstacle[:, 1], LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        x, y = map(vectorise, [x, y])
+        df = pd.DataFrame(np.hstack((x, y)), columns=['x', 'y'])
+        df.to_csv(OUTPUT_PATH_POLYGON_OBSTACLE, index=False)
+        df = pd.DataFrame(polygon_obstacle, columns=['lat', 'lon'])
+        # df.to_csv(FILEPATH + "Test/polygon_obstacle.csv", index=False)
+        df.to_csv(OUTPUT_PATH_POLYGON_OBSTACLE, index=False)
 
 
 if __name__ == "__main__":
     op = OpArea()
-
+    op.get_buffered_area()
+    # self.save_operational_areas()
+    # op.expand_munkholmen_area()
