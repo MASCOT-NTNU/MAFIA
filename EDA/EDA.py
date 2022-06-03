@@ -164,43 +164,69 @@ class EDA:
         self.depth_sinmod = np.array(self.sinmod_raw['zc'])
         self.salinity_sinmod = np.array(self.sinmod_raw['salinity'])
 
-        # xsinmod, ysinmod = latlon2xy(self.lat_sinmod, self.lon_sinmod, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
-        # xrot = xsinmod * np.cos(ROTATED_ANGLE) - ysinmod * np.sin(ROTATED_ANGLE)
-        # yrot = xsinmod * np.sin(ROTATED_ANGLE) + ysinmod * np.cos(ROTATED_ANGLE)
-        # self.grid_plot = []
-        # self.sal_plot = []
-        # self.ind_illegal = np.zeros([xrot.shape[0] * xrot.shape[1] * 10, 1])
+        # plot time steps
+        # for j in range(self.salinity_sinmod.shape[0]):
+        #     print(j)
+        #     fig = plt.figure(figsize=(35, 15))
+        #     gs = GridSpec(nrows=2, ncols=5)
+        #     for i in range(10):
+        #         ax = fig.add_subplot(gs[i])
+        #         # im = ax.scatter(self.lon_sinmod, self.lat_sinmod, c=self.salinity_sinmod[0, i, :, :], cmap=get_cmap("BrBG", 10),
+        #         #            vmin=10, vmax=30)
+        #         sal = self.salinity_sinmod[j, i, :, :]
+        #         levels = np.arange(VMIN, VMAX)
+        #         plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
+        #         CS = plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[e.threshold.item()], colors=('r',), linestyles=('-',),
+        #                          linewidths=(2,))
+        #         plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[0], colors=('w',), linestyles=('-',), linewidths=(2,))
+        #         plt.contourf(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
+        #         plt.plot(self.polygon_border[:, 1], self.polygon_border[:, 0], 'k-', linewidth=2)
+        #         plt.plot(self.polygon_obstacle[:, 1], self.polygon_obstacle[:, 0], 'k-', linewidth=2)
+        #         # plt.colorbar()
+        #         plt.ylim([np.amin(self.polygon_border[:, 0]), np.amax(self.polygon_border[:, 0])])
+        #         ax.set_title("Salinity field at {:.1f}m".format(self.depth_sinmod[i]))
+        #         if (i+1) % 5 == 0:
+        #             plt.colorbar()
+        #         if i >= 5:
+        #             ax.set_xlabel("Longitude [deg]")
+        #         if i == 0 or i == 5:
+        #             ax.set_ylabel("Latitude [deg]")
+        #     plt.suptitle("Salinity field on " + datetime.fromtimestamp(e.timestamp[j]).strftime("%Y-%m-%d, %H:%M"))
+        #     plt.savefig(FIGPATH + "SINMOD/P_{:03d}.jpg".format(j))
+        #     plt.close("all")
+        # # plt.show()
 
-        for j in range(self.salinity_sinmod.shape[0]):
-            print(j)
-            fig = plt.figure(figsize=(35, 15))
-            gs = GridSpec(nrows=2, ncols=5)
-            for i in range(10):
-                ax = fig.add_subplot(gs[i])
-                # im = ax.scatter(self.lon_sinmod, self.lat_sinmod, c=self.salinity_sinmod[0, i, :, :], cmap=get_cmap("BrBG", 10),
-                #            vmin=10, vmax=30)
-                sal = self.salinity_sinmod[j, i, :, :]
-                levels = np.arange(VMIN, VMAX)
-                plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
-                CS = plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[e.threshold.item()], colors=('r',), linestyles=('-',),
-                                 linewidths=(2,))
-                plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[0], colors=('w',), linestyles=('-',), linewidths=(2,))
-                plt.contourf(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
-                plt.plot(self.polygon_border[:, 1], self.polygon_border[:, 0], 'k-', linewidth=2)
-                plt.plot(self.polygon_obstacle[:, 1], self.polygon_obstacle[:, 0], 'k-', linewidth=2)
-                # plt.colorbar()
-                plt.ylim([np.amin(self.polygon_border[:, 0]), np.amax(self.polygon_border[:, 0])])
-                ax.set_title("Salinity field at {:.1f}m".format(self.depth_sinmod[i]))
-                if (i+1) % 5 == 0:
-                    plt.colorbar()
-                if i >= 5:
-                    ax.set_xlabel("Longitude [deg]")
-                if i == 0 or i == 5:
-                    ax.set_ylabel("Latitude [deg]")
-            plt.suptitle("Salinity field on " + datetime.fromtimestamp(e.timestamp[j]).strftime("%Y-%m-%d, %H:%M"))
-            plt.savefig(FIGPATH + "SINMOD/P_{:03d}.jpg".format(j))
-            plt.close("all")
+        # plot mean
+        # for j in range(self.salinity_sinmod.shape[0]):
+        fig = plt.figure(figsize=(35, 15))
+        gs = GridSpec(nrows=2, ncols=5)
+        for i in range(10):
+            ax = fig.add_subplot(gs[i])
+            # im = ax.scatter(self.lon_sinmod, self.lat_sinmod, c=self.salinity_sinmod[0, i, :, :], cmap=get_cmap("BrBG", 10),
+            #            vmin=10, vmax=30)
+            sal = np.mean(self.salinity_sinmod[:, i, :, :], axis=0)
+            levels = np.arange(VMIN, VMAX)
+            plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
+            CS = plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[e.threshold.item()], colors=('r',), linestyles=('-',),
+                             linewidths=(2,))
+            plt.contour(self.lon_sinmod, self.lat_sinmod, sal, levels=[0], colors=('w',), linestyles=('-',), linewidths=(2,))
+            plt.contourf(self.lon_sinmod, self.lat_sinmod, sal, levels=levels, cmap=get_cmap("BrBG", 10), vmin=VMIN, vmax=VMAX)
+            plt.plot(self.polygon_border[:, 1], self.polygon_border[:, 0], 'k-', linewidth=2)
+            plt.plot(self.polygon_obstacle[:, 1], self.polygon_obstacle[:, 0], 'k-', linewidth=2)
+            # plt.colorbar()
+            plt.ylim([np.amin(self.polygon_border[:, 0]), np.amax(self.polygon_border[:, 0])])
+            ax.set_title("Salinity field at {:.1f}m".format(self.depth_sinmod[i]))
+            if (i+1) % 5 == 0:
+                plt.colorbar()
+            if i >= 5:
+                ax.set_xlabel("Longitude [deg]")
+            if i == 0 or i == 5:
+                ax.set_ylabel("Latitude [deg]")
+        plt.suptitle("Salinity time-average from SINMOD on 2022-05-11")
+        plt.savefig(FIGPATH + "SINMOD_AVE.jpg")
+        plt.close("all")
         # plt.show()
+
         os.system("say finished")
         pass
 
