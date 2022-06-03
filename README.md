@@ -87,3 +87,7 @@ Open 4 iterfaces either through tmux or `Ctrl+Alt+T`.
 - `python3 MAFIALauncher.py`
 ---
 Then go to neptus to activate follow reference.
+
+[SINMOD salinity field](https://user-images.githubusercontent.com/44204509/171826273-a004e0a8-8c86-4964-b374-eeb10846630e.mp4)
+
+
