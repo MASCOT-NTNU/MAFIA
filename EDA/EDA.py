@@ -46,6 +46,7 @@ class EDA:
         self.load_gmrf_model()
         self.update_knowledge()
         self.load_threshold()
+        self.load_waypoint()
         self.load_auv_data()
 
     def load_polygons(self):
@@ -73,6 +74,10 @@ class EDA:
         self.threshold = np.load(SINMODPATH + "threshold.npy")
         print("E5: threshold is loaded successfully!", self.threshold)
 
+    def load_waypoint(self):
+        self.waypoint = pd.read_csv(FILEPATH + "Config/WaypointGraph.csv").to_numpy()
+        print("E6: Waypoint is loaded successfully!")
+
     def load_auv_data(self):
         self.data_auv = pd.read_csv(DATAPATH + "data_sync.csv").to_numpy()
         self.timestamp_auv = self.data_auv[:, 0]
@@ -81,7 +86,7 @@ class EDA:
         self.depth_auv = self.data_auv[:, 3]
         self.salinity_auv = self.data_auv[:, 4]
         self.temperature_auv = self.data_auv[:, 5]
-        print("AUV data is loaded successfully!")
+        print("E7: AUV data is loaded successfully!")
 
     def load_sinmod_data_along_auv_path(self, data_exists=True):
         if not data_exists:
@@ -94,6 +99,38 @@ class EDA:
             print("SINMOD data is loaded successfully!")
             print(self.data_sinmod.head())
             self.data_sinmod = self.data_sinmod.to_numpy()
+
+    def save_grid_to_gis(self):
+        ind_surface = np.where(self.gmrf_grid[:, 2] == .5)[0]
+        x = self.gmrf_grid[ind_surface, 0]
+        y = self.gmrf_grid[ind_surface, 1]
+        lat, lon = xy2latlon(x, y, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        gmrf_grid = np.vstack((lat, lon)).T
+        df = pd.DataFrame(gmrf_grid, columns=['lat', 'lon'])
+        df.to_csv(FILEPATH + "../GIS/csv/gmrf_grid.csv", index=False)
+
+        ind_surface = np.where(self.waypoint[:, 2] == .5)[0]
+        x = self.waypoint[ind_surface, 0]
+        y = self.waypoint[ind_surface, 1]
+        lat, lon = xy2latlon(x, y, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        gmrf_grid = np.vstack((lat, lon)).T
+        df = pd.DataFrame(gmrf_grid, columns=['lat', 'lon'])
+        df.to_csv(FILEPATH + "../GIS/csv/waypoint.csv", index=False)
+
+        prerun = np.vstack((self.lat_auv[:IND_END_PRERUN],
+                        self.lon_auv[:IND_END_PRERUN],
+                        self.depth_auv[:IND_END_PRERUN],
+                        self.salinity_auv[:IND_END_PRERUN])).T
+        df = pd.DataFrame(prerun, columns=['lat', 'lon', 'depth', 'salinity'])
+        df.to_csv(FILEPATH + "../GIS/csv/auv_prerun.csv", index=False)
+
+        adaptive = np.vstack((self.lat_auv[IND_END_PRERUN:],
+                        self.lon_auv[IND_END_PRERUN:],
+                        self.depth_auv[IND_END_PRERUN:],
+                        self.salinity_auv[IND_END_PRERUN:])).T
+        df = pd.DataFrame(adaptive, columns=['lat', 'lon', 'depth', 'salinity'])
+        df.to_csv(FILEPATH + "../GIS/csv/auv_adaptive.csv", index=False)
+        print("Dataset is saved successfully!")
 
     def plot_time_series(self):
         tf = np.vectorize(datetime.fromtimestamp)
@@ -397,23 +434,24 @@ class EDA:
         self.xplot = yrot[self.ind_plot]
         self.zplot = zrot[self.ind_plot]
 
+        self.dataset_assimilated  = np.empty([0, 3])
         for i in range(0, len(self.lat_auv), AUV_TIMESTEP):
-            mu_plot = self.knowledge.mu[self.ind_plot]
-            self.var_plot = self.knowledge.SigmaDiag[self.ind_plot]
-            self.ep_plot = get_ep(mu_plot.astype(np.float32), self.var_plot.astype(np.float32),
-                             np.float32(self.threshold))
+            # mu_plot = self.knowledge.mu[self.ind_plot]
+            # self.var_plot = self.knowledge.SigmaDiag[self.ind_plot]
+            # self.ep_plot = get_ep(mu_plot.astype(np.float32), self.var_plot.astype(np.float32),
+            #                  np.float32(self.threshold))
 
-            filename = FIGPATH + "mu_cond/jpg/P_{:03d}.jpg".format(counter)
-            fig_mu = self.plot_figure(mu_plot, filename, vmin=5, vmax=self.threshold.item(), opacity=.4,
-                                      surface_count=10, cmap="BrBG", cbar_title="Salinity")
-
-            filename = FIGPATH + "std_cond/jpg/P_{:03d}.jpg".format(counter)
-            fig_std = self.plot_figure(np.sqrt(self.var_plot), filename, vmin=0, vmax=1, opacity=.4,
-                                      surface_count=10, cmap="RdBu", cbar_title="STD")
-
-            filename = FIGPATH + "ep_cond/jpg/P_{:03d}.jpg".format(counter)
-            fig_ep = self.plot_figure(self.ep_plot, filename, vmin=0, vmax=1, opacity=.4,
-                                      surface_count=10, cmap="Brwnyl", cbar_title="EP")
+            # filename = FIGPATH + "mu_cond/jpg/P_{:03d}.jpg".format(counter)
+            # fig_mu = self.plot_figure(mu_plot, filename, vmin=5, vmax=self.threshold.item(), opacity=.4,
+            #                           surface_count=10, cmap="BrBG", cbar_title="Salinity")
+            #
+            # filename = FIGPATH + "std_cond/jpg/P_{:03d}.jpg".format(counter)
+            # fig_std = self.plot_figure(np.sqrt(self.var_plot), filename, vmin=0, vmax=1, opacity=.4,
+            #                           surface_count=10, cmap="RdBu", cbar_title="STD")
+            #
+            # filename = FIGPATH + "ep_cond/jpg/P_{:03d}.jpg".format(counter)
+            # fig_ep = self.plot_figure(self.ep_plot, filename, vmin=0, vmax=1, opacity=.4,
+            #                           surface_count=10, cmap="Brwnyl", cbar_title="EP")
 
             counter += 1
             print(counter)
@@ -444,28 +482,33 @@ class EDA:
             dataset = np.vstack((x, y,
                                  self.depth_auv[ind_start:ind_end],
                                  self.salinity_auv[ind_start:ind_end])).T
-            ind_measured, measurements = self.assimilate_data(dataset)
+            self.ind_measured, self.measurements, self.std_measurements = self.assimilate_data(dataset)
 
-            self.sampling_location_plot = []
-            for i in range(len(ind_measured)):
-                xtemp = (self.gmrf_grid[ind_measured[i], 0] * np.cos(ROTATED_ANGLE) -
-                         self.gmrf_grid[ind_measured[i], 1] * np.sin(ROTATED_ANGLE))
-                ytemp = (self.gmrf_grid[ind_measured[i], 0] * np.sin(ROTATED_ANGLE) +
-                         self.gmrf_grid[ind_measured[i], 1] * np.cos(ROTATED_ANGLE))
-                ztemp = -self.gmrf_grid[ind_measured[i], 2]
-                self.sampling_location_plot.append([ytemp, xtemp, ztemp])
+            dataset = np.hstack((vectorise(self.ind_measured), self.measurements, self.std_measurements))
+            self.dataset_assimilated = np.append(self.dataset_assimilated, dataset, axis=0)
+            # self.sampling_location_plot = []
+            # for i in range(len(self.ind_measured)):
+            #     xtemp = (self.gmrf_grid[self.ind_measured[i], 0] * np.cos(ROTATED_ANGLE) -
+            #              self.gmrf_grid[self.ind_measured[i], 1] * np.sin(ROTATED_ANGLE))
+            #     ytemp = (self.gmrf_grid[self.ind_measured[i], 0] * np.sin(ROTATED_ANGLE) +
+            #              self.gmrf_grid[self.ind_measured[i], 1] * np.cos(ROTATED_ANGLE))
+            #     ztemp = -self.gmrf_grid[self.ind_measured[i], 2]
+            #     self.sampling_location_plot.append([ytemp, xtemp, ztemp])
 
-            self.gmrf_model.update(rel=measurements, ks=ind_measured)
-            self.update_knowledge()
+            # self.gmrf_model.update(rel=measurements, ks=ind_measured)
+            # self.update_knowledge()
 
             enablePrint()
 
-            plotly.offline.plot(fig_mu, filename=FIGPATH + "mu_cond/html/P_{:03d}.html".format(counter), auto_open=False)
-            plotly.offline.plot(fig_std, filename=FIGPATH + "std_cond/html/P_{:03d}.html".format(counter),
-                                auto_open=False)
-            plotly.offline.plot(fig_ep, filename=FIGPATH + "ep_cond/html/P_{:03d}.html".format(counter),
-                                auto_open=False)
-        pass
+            # plotly.offline.plot(fig_mu, filename=FIGPATH + "mu_cond/html/P_{:03d}.html".format(counter), auto_open=False)
+            # plotly.offline.plot(fig_std, filename=FIGPATH + "std_cond/html/P_{:03d}.html".format(counter),
+            #                     auto_open=False)
+            # plotly.offline.plot(fig_ep, filename=FIGPATH + "ep_cond/html/P_{:03d}.html".format(counter),
+            #                     auto_open=False)
+
+        df = pd.DataFrame(self.dataset_assimilated , columns=['ind', 'salinity', 'std'])
+        df.to_csv(FILEPATH + "../Experiments/20220511/data4martin.csv", index=False)
+        print("Dataset is saved successfully!")
         os.system("say finished")
 
     def plot_figure(self, value, filename, vmin=None, vmax=None, opacity=None, surface_count=None, cmap=None,
@@ -578,13 +621,15 @@ class EDA:
         t2 = time.time()
         ind_assimilated = np.unique(ind_min_distance)
         salinity_assimilated = np.zeros(len(ind_assimilated))
+        std_assimilated = np.zeros(len(ind_assimilated))
         for i in range(len(ind_assimilated)):
             ind_selected = np.where(ind_min_distance == ind_assimilated[i])[0]
             salinity_assimilated[i] = np.mean(dataset[ind_selected, 3])
+            std_assimilated[i] = np.std(dataset[ind_selected, 3])
         print("Data assimilation takes: ", t2 - t1)
         self.auv_data = []
         print("Reset auv_data: ", self.auv_data)
-        return ind_assimilated, vectorise(salinity_assimilated)
+        return ind_assimilated, vectorise(salinity_assimilated), vectorise(std_assimilated)
 
     def plot_variogram(self):
         self.load_sinmod_data_along_auv_path(data_exists=True)
@@ -609,10 +654,12 @@ if __name__ == "__main__":
     # e.plot_scatter_data()
     # e.plot_sinmod()
     # e.plot_prior()
-    # e.plot_recap_mission()
+    e.plot_recap_mission()
     # e.plot_time_series()
     # e.plot_variogram()
-    e.plot_sinmod_layer()
+    # e.plot_sinmod_layer()
+    # e.save_grid_to_gis()
+
 
 #%%
 # plt.scatter(e.lon_sinmod, e.lat_sinmod, c=e.salinity_sinmod[0, 0, :, :], cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)
