@@ -436,22 +436,22 @@ class EDA:
 
         self.dataset_assimilated  = np.empty([0, 3])
         for i in range(0, len(self.lat_auv), AUV_TIMESTEP):
-            # mu_plot = self.knowledge.mu[self.ind_plot]
-            # self.var_plot = self.knowledge.SigmaDiag[self.ind_plot]
-            # self.ep_plot = get_ep(mu_plot.astype(np.float32), self.var_plot.astype(np.float32),
-            #                  np.float32(self.threshold))
+            mu_plot = self.knowledge.mu[self.ind_plot]
+            self.var_plot = self.knowledge.SigmaDiag[self.ind_plot]
+            self.ep_plot = get_ep(mu_plot.astype(np.float32), self.var_plot.astype(np.float32),
+                             np.float32(self.threshold))
 
-            # filename = FIGPATH + "mu_cond/jpg/P_{:03d}.jpg".format(counter)
-            # fig_mu = self.plot_figure(mu_plot, filename, vmin=5, vmax=self.threshold.item(), opacity=.4,
-            #                           surface_count=10, cmap="BrBG", cbar_title="Salinity")
-            #
-            # filename = FIGPATH + "std_cond/jpg/P_{:03d}.jpg".format(counter)
-            # fig_std = self.plot_figure(np.sqrt(self.var_plot), filename, vmin=0, vmax=1, opacity=.4,
-            #                           surface_count=10, cmap="RdBu", cbar_title="STD")
-            #
-            # filename = FIGPATH + "ep_cond/jpg/P_{:03d}.jpg".format(counter)
-            # fig_ep = self.plot_figure(self.ep_plot, filename, vmin=0, vmax=1, opacity=.4,
-            #                           surface_count=10, cmap="Brwnyl", cbar_title="EP")
+            filename = FIGPATH + "mu_cond/jpg/P_{:03d}.jpg".format(counter)
+            fig_mu = self.plot_figure(mu_plot, filename, vmin=5, vmax=self.threshold.item(), opacity=.4,
+                                      surface_count=10, cmap="BrBG", cbar_title="Salinity")
+
+            filename = FIGPATH + "std_cond/jpg/P_{:03d}.jpg".format(counter)
+            fig_std = self.plot_figure(np.sqrt(self.var_plot), filename, vmin=0, vmax=1, opacity=.4,
+                                      surface_count=10, cmap="RdBu", cbar_title="STD")
+
+            filename = FIGPATH + "ep_cond/jpg/P_{:03d}.jpg".format(counter)
+            fig_ep = self.plot_figure(self.ep_plot, filename, vmin=0, vmax=1, opacity=.4,
+                                      surface_count=10, cmap="Brwnyl", cbar_title="EP")
 
             counter += 1
             print(counter)
@@ -505,10 +505,13 @@ class EDA:
             #                     auto_open=False)
             # plotly.offline.plot(fig_ep, filename=FIGPATH + "ep_cond/html/P_{:03d}.html".format(counter),
             #                     auto_open=False)
+            print(counter)
+            if counter >= 3:
+                break
 
-        df = pd.DataFrame(self.dataset_assimilated , columns=['ind', 'salinity', 'std'])
-        df.to_csv(FILEPATH + "../Experiments/20220511/data4martin.csv", index=False)
-        print("Dataset is saved successfully!")
+        # df = pd.DataFrame(self.dataset_assimilated , columns=['ind', 'salinity', 'std'])
+        # df.to_csv(FILEPATH + "../Experiments/20220511/data4martin.csv", index=False)
+        # print("Dataset is saved successfully!")
         os.system("say finished")
 
     def plot_figure(self, value, filename, vmin=None, vmax=None, opacity=None, surface_count=None, cmap=None,
@@ -516,7 +519,22 @@ class EDA:
         points_int, values_int = interpolate_3d(self.xplot, self.yplot, self.zplot, value)
         fig = make_subplots(rows=1, cols=1, specs = [[{'type': 'scene'}]])
 
-        fig.add_trace(go.Volume(
+        # fig.add_trace(go.Volume(
+        #     x=points_int[:, 0],
+        #     y=points_int[:, 1],
+        #     z=points_int[:, 2],
+        #     value=values_int.flatten(),
+        #     isomin=vmin,
+        #     isomax=vmax,
+        #     opacity=opacity,
+        #     surface_count=surface_count,
+        #     coloraxis="coloraxis",
+        #     caps=dict(x_show=False, y_show=False, z_show=False),
+        # ),
+        #     row=1, col=1
+        # )
+
+        fig.add_trace(go.Isosurface(
             x=points_int[:, 0],
             y=points_int[:, 1],
             z=points_int[:, 2],
