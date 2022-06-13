@@ -1,24 +1,20 @@
-import pandas as pd
 
-# from GOOGLE.Field.Grid.gridWithinPolygonGenerator import GridGenerator
-from GOOGLE.Simulation_2DNidelva.Field.Grid.HexagonalGrid2D import HexgonalGrid2DGenerator
+"""
+This script tests comparison
+"""
 from usr_func import *
+from MAFIA.Simulation.Config.Config import *
 
-PATH_OPERATION_AREA = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/GOOGLE/Simulation_2DNidelva/Config/OpArea.csv"
-PATH_MUNKHOLMEN = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/GOOGLE/Simulation_2DNidelva/Config/Munkholmen.csv"
-DISTANCE_LATERAL = 150
+waypoint_graph = pd.read_csv(FILEPATH+"Simulation/Config/WaypointGraph.csv").to_numpy()
+gmrf_grid = pd.read_csv(FILEPATH+"Simulation/Config/GMRFGrid.csv").to_numpy()
 
-polygon = pd.read_csv(PATH_OPERATION_AREA).to_numpy()
-munkholmen = pd.read_csv(PATH_MUNKHOLMEN).to_numpy()
-gridGenerator = HexgonalGrid2DGenerator(polygon_border=polygon, polygon_obstacle=munkholmen, distance_neighbour=500)
-# gridGenerator = GridGenerator(polygon=polygon, depth=[0], distance_neighbour=DISTANCE_LATERAL, no_children=6, points_allowed=5000)
-# grid = gridGenerator.grid
-coordinates = gridGenerator.coordinates2d
+ind_top_gmrf = np.where(gmrf_grid[:, 2] < 0)[0]
+ind_top_waypoint = np.where(waypoint_graph[:, 2] < 1)[0]
 
-plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
-plt.plot(polygon[:, 1], polygon[:, 0], 'r-.')
-plt.plot(munkholmen[:, 1], munkholmen[:, 0], 'r-.')
+plt.plot(gmrf_grid[ind_top_gmrf, 1], gmrf_grid[ind_top_gmrf, 0], 'k.', alpha=.4)
+plt.plot(waypoint_graph[ind_top_waypoint, 1], waypoint_graph[ind_top_waypoint, 0], 'r.', alpha=.4)
 plt.show()
+
 
 
 

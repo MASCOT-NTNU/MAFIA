@@ -11,79 +11,106 @@ next_location = MyopicPlanning3D(Knowledge, Experience).next_waypoint
 """
 
 from usr_func import *
-from MAFIA.Simulation.Field.Grid.Location import *
-from MAFIA.Simulation.Kernel.Kernel import Kernel
+from MAFIA.Simulation.Config.Config import *
 import time
+
+
+vectorize(['float32(float32, float32, float32)'], target='cuda')
+def get_eibv_from_gpu(mu, SigmaDiag, threshold):
+  cdf = norm.cdf(threshold, mu, SigmaDiag)
+  bv = cdf*(1-cdf)
+  ibv = np.sum(bv)
+  return ibv
+
+
+def get_eibv_from_fast(mu, sigma, threshold):
+  p = norm.cdf(threshold, mu, sigma)
+  bv = p * (1 - p)
+  ibv = np.sum(bv)
+  return ibv
 
 
 class MyopicPlanning3D:
 
-    def __init__(self, knowledge):
+    def __init__(self, waypoints=None, hash_neighbours=None, hash_waypoint2gmrf=None):
+        self.waypoints = waypoints
+        self.hash_neighbours = hash_neighbours
+        self.hash_waypoint2gmrf = hash_waypoint2gmrf
+        print("MyopicPlanner is ready")
+
+    def update_planner(self, knowledge=None, gmrf_model=None):
         self.knowledge = knowledge
-        self.kernel = Kernel(self.knowledge)
-        self.find_next_waypoint()
+        self.gmrf_model = gmrf_model
+        print("Planner is updated successfully!")
 
-    def find_next_waypoint(self):
-        self.filter_neighbouring_loc()
+    def find_next_waypoint_using_min_eibv(self, ind_current=None, ind_previous=None, ind_visited=None):
+        self.ind_current = ind_current
+        self.ind_previous = ind_previous
+        self.ind_visited = ind_visited
+
+        self.find_all_neighbours()
+        self.smooth_filter_neighbours()
+        self.EIBV = []
         t1 = time.time()
-        eibv = []
-        for k in range(len(self.knowledge.ind_neighbour_filtered)):
-            # print("ind k: ", self.knowledge.ind_neighbour_filtered[k])
-            eibv.append(self.kernel.get_eibv_1d(self.knowledge.ind_neighbour_filtered[k]))
-        t2 = time.time()
-        if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
-            while True:
-                self.knowledge.next_location = self.search_for_new_location()
-                # TODO: add go home function
+        for ind_candidate in self.ind_candidates:
+            self.EIBV.append(self.get_eibv_from_gmrf_model(self.hash_waypoint2gmrf[ind_candidate]))
+        if self.EIBV:
+            self.ind_next = self.ind_candidates[np.argmin(self.EIBV)]
         else:
-            self.knowledge.next_location = \
-                self.get_location_from_ind(self.knowledge.ind_neighbour_filtered[np.argmin(np.array(eibv))])
-        # print(eibv)
-        print("Next location: ",
-              self.knowledge.next_location.lat,
-              self.knowledge.next_location.lon,
-              self.knowledge.next_location.depth)
-        print("Time consumed: ", t2 - t1)
-
-    def filter_neighbouring_loc(self):
-        t1 = time.time()
-        id = []
-        self.ind_neighbour_locations = self.knowledge.neighbour_hash_table[self.knowledge.ind_current_location[0]]
-        # print("Before filtering: ", self.ind_neighbour_locations)
-        vec1 = self.get_vector_between_locations(self.knowledge.previous_location, self.knowledge.current_location)
-        for i in range(len(self.ind_neighbour_locations)):
-            if self.ind_neighbour_locations[i] != self.knowledge.ind_current_location:
-                vec2 = self.get_vector_between_locations(self.knowledge.current_location,
-                                                         self.get_location_from_ind(self.ind_neighbour_locations[i]))
-                if np.dot(vec1.T, vec2) >= 0:
-                    id.append(self.ind_neighbour_locations[i])
+            self.ind_next = self.ind_neighbours[np.random.randint(len(self.ind_neighbours))]
         t2 = time.time()
-        self.knowledge.ind_neighbour_filtered = np.unique(np.array(id))
-        # print("Filtering takes: ", t2 - t1)
-        # print("after filtering: ", self.knowledge.ind_neighbour_filtered)
+        print("Path planning takes: ", t2 - t1)
+        np.savetxt(FILEPATH + "Simulation/Waypoint/ind_next.txt", np.array([self.ind_next]))
+        print("ind_next is saved!")
+        return self.ind_next
 
-    def get_vector_between_locations(self, loc_start, loc_end):
-        dx, dy, dz = latlondepth2xyz(loc_end.lat, loc_end.lon, loc_end.depth,
-                                     loc_start.lat, loc_start.lon, loc_start.depth)
-        return vectorise([dx, dy, dz])
+    def find_all_neighbours(self):
+        self.ind_neighbours = self.hash_neighbours[self.ind_current]
 
+    def smooth_filter_neighbours(self):
+        vec1 = self.get_vec_from_indices(self.ind_previous, self.ind_current)
+        self.ind_candidates = []
+        for i in range(len(self.ind_neighbours)):
+            ind_candidate = self.ind_neighbours[i]
+            if not ind_candidate in self.ind_visited:
+                vec2 = self.get_vec_from_indices(self.ind_current, ind_candidate)
+                if np.dot(vec1.T, vec2) >= 0:
+                    self.ind_candidates.append(ind_candidate)
+
+    def get_vec_from_indices(self, ind_start, ind_end):
+        x_start = self.waypoints[ind_start, 0]
+        y_start = self.waypoints[ind_start, 1]
+        z_start = self.waypoints[ind_start, 2]
+
+<<<<<<< HEAD
     def get_location_from_ind(self, ind):
         return Location(self.knowledge.coordinates_wgs[ind, 0],
                         self.knowledge.coordinates_wgs[ind, 1],
                         self.knowledge.coordinates_wgs[ind, 2])
+=======
+        x_end = self.waypoints[ind_end, 0]
+        y_end = self.waypoints[ind_end, 1]
+        z_end = self.waypoints[ind_end, 2]
+>>>>>>> 714a58ee63c4a50d3e4673f758c6b2c8659a086e
 
-    def search_for_new_location(self):
-        ind_next = np.abs(get_excursion_prob_1d(self.knowledge.mu_cond, self.knowledge.Sigma_cond,
-                                                self.knowledge.threshold) - .5).argmin()
-        return self.get_location_from_ind(ind_next)
+        dx = x_end - x_start
+        dy = y_end - y_start
+        dz = z_end - z_start
 
-    # @property
-    # def next_waypoint(self):
-    #     return self.knowledge.coordinates[self.knowledge.ind_next, 0], \
-    #            self.knowledge.coordinates[self.knowledge.ind_next, 1], \
-    #            self.knowledge.coordinates[self.knowledge.ind_next, 2]
+        return vectorise([dx, dy, dz])
 
+    def get_eibv_from_gmrf_model(self, ind_candidate):
+        t1 = time.time()
+        variance_post = self.gmrf_model.candidate(ks=ind_candidate)  # update the field
+        t2 = time.time()
+        # print("Update variance take: ", t2 - t1)
 
+        # eibv = get_eibv_from_gpu(self.knowledge.mu, variance_post)
+        t1 = time.time()
+        eibv = get_eibv_from_fast(self.knowledge.mu, variance_post, self.gmrf_model.threshold)
+        t2 = time.time()
+        # print("EIBV calculation takes: ", t2 - t1)
+        return eibv
 
 
 

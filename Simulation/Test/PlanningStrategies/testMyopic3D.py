@@ -2,17 +2,16 @@
 from usr_func import *
 
 from MAFIA.Simulation.PlanningStrategies.Myopic3D import MyopicPlanning3D
-from MAFIA.Simulation.Kernel.Kernel import Kernel
-from MAFIA.Simulation.Field.Grid.Location import *
-from MAFIA.Simulation.Field.Knowledge.Knowledge import Knowledge
+from MAFIA.Simulation.PreConfig.WaypointGraph.Location import *
+from MAFIA.Simulation.Knowledge.Knowledge import Knowledge
 from MAFIA.spde import spde
 import pickle
 
 FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/"
 
 
-coordinates = pd.read_csv(FILEPATH + "Simulation/Field/Grid/Grid.csv").to_numpy()
-neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/Field/Grid/Neighbours.p", 'rb')
+coordinates = pd.read_csv(FILEPATH + "Simulation/PreConfig/WaypointGraph/WaypointGraph.csv").to_numpy()
+neighbour_hash_table_filehandler = open(FILEPATH + "Simulation/PreConfig/WaypointGraph/HashNeighbours.p", 'rb')
 neighbour_hash_table = pickle.load(neighbour_hash_table_filehandler)
 neighbour_hash_table_filehandler.close()
 
@@ -23,7 +22,7 @@ spde_model = spde(model=2)
 
 
 mu_prior = spde_model.mu
-knowledge = Knowledge(coordinates=coordinates, neighbour_hash_table=neighbour_hash_table, mu_cond=mu_prior,
+knowledge = Knowledge(coordinates_grid=coordinates, neighbour_hash_table_waypoint=neighbour_hash_table, mu_cond=mu_prior,
                       threshold=THRESHOLD, spde_model=spde_model, previous_location=previous_location,
                       current_location=current_location)
 
