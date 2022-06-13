@@ -53,8 +53,8 @@ def plotf_vector(grid, values, title=None, alpha=None, cmap="Paired", cbar_title
     # plt.grid()
     plt.title(title)
 
-    plt.plot(self.kernel.polygon_border[:, 1], self.kernel.polygon_border[:, 0], 'k-', linewidth=1)
-    plt.plot(self.kernel.polygon_obstacle[:, 1], self.kernel.polygon_obstacle[:, 0], 'k-', linewidth=1)
+    plt.plot(self.gp_kernel.polygon_border_xy[:, 1], self.gp_kernel.polygon_border_xy[:, 0], 'k-', linewidth=1)
+    plt.plot(self.gp_kernel.polygon_obstacle_xy[:, 1], self.gp_kernel.polygon_obstacle_xy[:, 0], 'k-', linewidth=1)
 
     # plt.show()
 
@@ -88,7 +88,7 @@ def plotf_vector_scatter(grid, values, title=None, alpha=None, cmap="Paired", cb
 def is_masked(lat, lon, kernel):
     point = Point(lat, lon)
     masked = False
-    if kernel.polygon_obstacle_path.contains(point) or not kernel.polygon_border_path.contains(point):
+    if kernel.polygon_obstacle_shapely.contains(point) or not kernel.polygon_border_shapely.contains(point):
         masked = True
     return masked
 

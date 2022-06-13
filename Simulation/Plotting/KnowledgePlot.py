@@ -22,7 +22,7 @@ class KnowledgePlot:
         if knowledge is None:
             raise ValueError("")
         self.knowledge = knowledge
-        self.coordinates = self.knowledge.coordinates
+        self.coordinates = self.knowledge.coordinates_wgs
         self.vmin = vmin
         self.vmax = vmax
         self.filename = filename
@@ -107,9 +107,9 @@ class KnowledgePlot:
 
         if len(self.knowledge.ind_neighbour_filtered):
             fig.add_trace(go.Scatter3d(
-                x=self.knowledge.coordinates[self.knowledge.ind_neighbour_filtered, 1],
-                y=self.knowledge.coordinates[self.knowledge.ind_neighbour_filtered, 0],
-                z=-self.knowledge.coordinates[self.knowledge.ind_neighbour_filtered, 2],
+                x=self.knowledge.coordinates_wgs[self.knowledge.ind_neighbour_filtered, 1],
+                y=self.knowledge.coordinates_wgs[self.knowledge.ind_neighbour_filtered, 0],
+                z=-self.knowledge.coordinates_wgs[self.knowledge.ind_neighbour_filtered, 2],
                 mode='markers',
                 marker=dict(
                     size=15,

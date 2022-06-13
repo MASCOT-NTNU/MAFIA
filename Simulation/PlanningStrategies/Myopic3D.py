@@ -68,9 +68,9 @@ class MyopicPlanning3D:
         return vectorise([dx, dy, dz])
 
     def get_location_from_ind(self, ind):
-        return Location(self.knowledge.coordinates[ind, 0],
-                        self.knowledge.coordinates[ind, 1],
-                        self.knowledge.coordinates[ind, 2])
+        return Location(self.knowledge.coordinates_wgs[ind, 0],
+                        self.knowledge.coordinates_wgs[ind, 1],
+                        self.knowledge.coordinates_wgs[ind, 2])
 
     def search_for_new_location(self):
         ind_next = np.abs(get_excursion_prob_1d(self.knowledge.mu_cond, self.knowledge.Sigma_cond,
