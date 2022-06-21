@@ -63,7 +63,7 @@ class EDA:
         print("E2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
-        self.gmrf_model = spde(model=2, method=2)
+        self.gmrf_model = spde(model=2, reduce=True, method=2)
         print("E3: GMRF model is loaded successfully!")
 
     def update_knowledge(self):
@@ -623,10 +623,10 @@ class EDA:
         return fig
 
     def assimilate_data(self, dataset):
-        print("dataset before filtering: ", dataset[-10:, :])
+        # print("dataset before filtering: ", dataset[-10:, :])
         ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) >= MIN_DEPTH_FOR_DATA_ASSIMILATION)[0]
         dataset = dataset[ind_remove_noise_layer, :]
-        print("dataset after filtering: ", dataset[-10:, :])
+        # print("dataset after filtering: ", dataset[-10:, :])
         t1 = time.time()
         dx = (vectorise(dataset[:, 0]) @ np.ones([1, self.N_gmrf_grid]) -
               np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 0]).T) ** 2
@@ -646,7 +646,7 @@ class EDA:
             std_assimilated[i] = np.std(dataset[ind_selected, 3])
         print("Data assimilation takes: ", t2 - t1)
         self.auv_data = []
-        print("Reset auv_data: ", self.auv_data)
+        # print("Reset auv_data: ", self.auv_data)
         return ind_assimilated, vectorise(salinity_assimilated), vectorise(std_assimilated)
 
     def plot_variogram(self):
@@ -666,14 +666,29 @@ class EDA:
         pass
 
     def save_auv_data_4_martin(self):
-        x, y = latlon2xy(self.lat_auv, self.lon_auv, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
-        dataset = np.vstack((x, y, self.depth_auv.flatten(), self.salinity_auv.flatten())).T
-        self.ind, self.sal, self.std = self.assimilate_data(dataset)
-
-        df = pd.DataFrame(np.vstack((self.ind, self.sal.flatten(), self.std.flatten())).T, columns=['ind', 'salinity', 'std'])
+        self.data = np.empty([0, 3])
+        step = 150
+        for i in range(0, len(self.lat_auv), step):
+            print(i)
+            if i + step <= len(self.lat_auv):
+                lat = self.lat_auv[i:i+step]
+                lon = self.lon_auv[i:i+step]
+                depth = self.depth_auv[i:i+step]
+                sal = self.salinity_auv[i:i+step]
+            else:
+                lat = self.lat_auv[i:]
+                lon = self.lon_auv[i:]
+                depth = self.depth_auv[i:]
+                sal = self.salinity_auv[i:]
+            x, y = latlon2xy(lat, lon, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+            z = depth
+            dataset = np.vstack((x, y, z, sal)).T
+            ind, sal, std = self.assimilate_data(dataset)
+            data_new = np.vstack((ind, sal.flatten(), std.flatten())).T
+            self.data = np.append(self.data, data_new, axis=0)
+        df = pd.DataFrame(self.data, columns=['ind', 'salinity', 'std'])
         df.to_csv(FILEPATH + "data4martin.csv", index=False)
         print("data is saved successfully!")
-        pass
 
 if __name__ == "__main__":
     e = EDA()
@@ -687,6 +702,29 @@ if __name__ == "__main__":
     # e.plot_variogram()
     # e.plot_sinmod_layer()
     # e.save_grid_to_gis()
+
+#%%
+# df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
+# ind = df[:, 0].astype(int)
+# sal = df[:, 1]
+# std = df[:, 2]
+# ind_s = ind[:400]
+ind_s = e.data[:300, 0].astype(int)
+
+plt.plot(e.gmrf_grid[:, 1], e.gmrf_grid[:, 0], 'k.')
+plt.plot(e.gmrf_grid[ind_s, 1], e.gmrf_grid[ind_s, 0], 'r.')
+plt.show()
+#%%
+
+x, y = latlon2xy(e.lat_auv[:100], e.lon_auv[:100], LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+z = e.depth_auv[:100]
+sal = e.salinity_auv[:100]
+dataset = np.vstack((x, y, z, sal)).T
+ind, s, std = e.assimilate_data(dataset)
+
+plt.plot(e.gmrf_grid[:, 1], e.gmrf_grid[:, 0], 'k.')
+plt.plot(e.gmrf_grid[ind, 1], e.gmrf_grid[ind, 0], 'r.')
+plt.show()
 
 
 #%%
@@ -884,5 +922,11 @@ plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
 
 
 #%%
+df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
+ind = df[:, 0].astype(int)
+plt.scatter(e.gmrf_grid[ind[:100], 1], e.gmrf_grid[ind[:100], 0], c=df[:100
+, 1])
+plt.colorbar()
+plt.show()
 
 
