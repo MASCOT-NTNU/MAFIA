@@ -81,22 +81,13 @@ class MyopicPlanning3D:
         x_start = self.waypoints[ind_start, 0]
         y_start = self.waypoints[ind_start, 1]
         z_start = self.waypoints[ind_start, 2]
-
-<<<<<<< HEAD
-    def get_location_from_ind(self, ind):
-        return Location(self.knowledge.coordinates_wgs[ind, 0],
-                        self.knowledge.coordinates_wgs[ind, 1],
-                        self.knowledge.coordinates_wgs[ind, 2])
-=======
         x_end = self.waypoints[ind_end, 0]
         y_end = self.waypoints[ind_end, 1]
         z_end = self.waypoints[ind_end, 2]
->>>>>>> 714a58ee63c4a50d3e4673f758c6b2c8659a086e
 
         dx = x_end - x_start
         dy = y_end - y_start
         dz = z_end - z_start
-
         return vectorise([dx, dy, dz])
 
     def get_eibv_from_gmrf_model(self, ind_candidate):

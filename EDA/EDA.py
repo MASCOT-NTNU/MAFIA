@@ -1,75 +1,3 @@
-<<<<<<< HEAD
-import numpy as np
-import pandas as pd
-
-from DataHandler.SINMOD import SINMOD
-from usr_func import *
-FILEPATH = "/Users/yaolin/HomeOffice/MAFIA/EDA/"
-FIGPATH = FILEPATH + "fig/"
-# FILEPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/"
-# FIGPATH = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/EDA/fig/"
-# data_auv = pd.read_csv(FILEPATH + "AUVData.csv")
-# lat_auv = data_auv['lat'].to_numpy()
-# lon_auv = data_auv['lon'].to_numpy()
-# depth_auv = data_auv['depth'].to_numpy()
-# coordinates_auv = np.vstack((lat_auv, lon_auv, depth_auv)).T
-# salinity_auv = data_auv['salinity'].to_numpy()
-# df = pd.DataFrame(np.vstack((lat_auv, lon_auv, depth_auv, salinity_auv)).T, columns=['lat', 'lon', 'depth', 'salinity'])
-# df.to_csv(FILEPATH + "auv.csv", index=False)
-
-# sinmod = SINMOD()
-# filenames_fullpath = ["/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/SINMOD_DATA/samples_2021.05.27.nc"]
-# sinmod.load_sinmod_data(raw_data=True, filenames=filenames_fullpath)
-# sinmod.get_data_at_coordinates(coordinates_auv, filename="/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects/MAFIA/EDA/sinmod.csv")
-
-data_auv = pd.read_csv(FILEPATH + "auv.csv").to_numpy()
-data_sinmod = pd.read_csv(FILEPATH + "sinmod.csv").to_numpy()
-
-
-#%%
-
-from pathlib import Path
-fig = go.Figure(data=[go.Scatter3d(
-    x=data_auv[:, 1],
-    y=data_auv[:, 0],
-    z=-data_auv[:, 2],
-    mode='markers',
-    marker=dict(
-        size=8,
-        color=data_auv[:, 3],                # set color to an array/list of desired values
-        colorscale='BrBG',   # choose a colorscale
-        opacity=0.8
-    )
-)])
-
-
-# tight layout
-fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-figname = FIGPATH+"data_auv.html"
-plotly.offline.plot(fig, filename=figname, auto_open=False)
-os.system('open -a \"Google Chrome\" '+figname)
-
-
-#%%
-fig = go.Figure(data=[go.Scatter3d(
-    x=data_sinmod[:, 1],
-    y=data_sinmod[:, 0],
-    z=-data_sinmod[:, 2],
-    mode='markers',
-    marker=dict(
-        size=8,
-        color=data_sinmod[:, 3],                # set color to an array/list of desired values
-        colorscale='BrBG',   # choose a colorscale
-        opacity=0.8
-    )
-)])
-
-# tight layout
-fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-figname = FIGPATH+"data_sinmod.html"
-plotly.offline.plot(fig, filename=figname, auto_open=False)
-os.system('open -a \"Google Chrome\" '+figname)
-=======
 """
 This script does simple EDA analysis
 Author: Yaolin Ge
@@ -135,7 +63,7 @@ class EDA:
         print("E2: GMRF grid is loaded successfully!")
 
     def load_gmrf_model(self):
-        self.gmrf_model = spde(model=2, reduce=True, method=2)
+        self.gmrf_model = spde(model=2, method=2)
         print("E3: GMRF model is loaded successfully!")
 
     def update_knowledge(self):
@@ -737,14 +665,24 @@ class EDA:
         )])
         pass
 
+    def save_auv_data_4_martin(self):
+        x, y = latlon2xy(self.lat_auv, self.lon_auv, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+        dataset = np.vstack((x, y, self.depth_auv.flatten(), self.salinity_auv.flatten())).T
+        self.ind, self.sal, self.std = self.assimilate_data(dataset)
+
+        df = pd.DataFrame(np.vstack((self.ind, self.sal.flatten(), self.std.flatten())).T, columns=['ind', 'salinity', 'std'])
+        df.to_csv(FILEPATH + "data4martin.csv", index=False)
+        print("data is saved successfully!")
+        pass
 
 if __name__ == "__main__":
     e = EDA()
+    e.save_auv_data_4_martin()
     # e.load_sinmod_data(data_exists=True)
     # e.plot_scatter_data()
     # e.plot_sinmod()
     # e.plot_prior()
-    e.plot_recap_mission()
+    # e.plot_recap_mission()
     # e.plot_time_series()
     # e.plot_variogram()
     # e.plot_sinmod_layer()
@@ -945,31 +883,6 @@ fig.update_layout(
 plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
 
 
->>>>>>> 714a58ee63c4a50d3e4673f758c6b2c8659a086e
-
 #%%
 
 
-
-<<<<<<< HEAD
-=======
-self = e
-def is_location_valid(lat, lon):
-    isvalid = 1
-    point = Point(lat, lon)
-    if self.polygon_obstacle_shapely.contains(point) or not self.polygon_border_shapely.contains(point):
-        isvalid = 0
-    return isvalid
-
-valid_matrix = np.ones_like(lat)
-for i in range(valid_matrix.shape[0]):
-    for j in range(valid_matrix.shape[1]):
-        valid_matrix[i, j] = is_location_valid(lat[i, j], lon[i, j])
-
-#%%
-ind_row = np.where(valid_matrix == True)[0]
-ind_col = np.where(valid_matrix == True)[1]
-
-#%%
-plt.contour(e.lon_sinmod[ind_row, ind_col], e.lat_sinmod[ind_row, ind_col], sal[ind_row, ind_col], levels=levels, cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)
->>>>>>> 714a58ee63c4a50d3e4673f758c6b2c8659a086e
