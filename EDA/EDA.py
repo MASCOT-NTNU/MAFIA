@@ -667,7 +667,7 @@ class EDA:
 
     def save_auv_data_4_martin(self):
         self.data = np.empty([0, 3])
-        step = 150
+        step = 30
         for i in range(0, len(self.lat_auv), step):
             print(i)
             if i + step <= len(self.lat_auv):
@@ -709,7 +709,7 @@ if __name__ == "__main__":
 # sal = df[:, 1]
 # std = df[:, 2]
 # ind_s = ind[:400]
-ind_s = e.data[:300, 0].astype(int)
+ind_s = e.data[:250, 0].astype(int)
 
 plt.plot(e.gmrf_grid[:, 1], e.gmrf_grid[:, 0], 'k.')
 plt.plot(e.gmrf_grid[ind_s, 1], e.gmrf_grid[ind_s, 0], 'r.')
