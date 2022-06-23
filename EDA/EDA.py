@@ -692,7 +692,7 @@ class EDA:
 
 if __name__ == "__main__":
     e = EDA()
-    e.save_auv_data_4_martin()
+    # e.save_auv_data_4_martin()
     # e.load_sinmod_data(data_exists=True)
     # e.plot_scatter_data()
     # e.plot_sinmod()
@@ -702,6 +702,15 @@ if __name__ == "__main__":
     # e.plot_variogram()
     # e.plot_sinmod_layer()
     # e.save_grid_to_gis()
+
+#%%
+# plt.plot(e.lon_auv, e.lat_auv, 'k.')
+# plt.show()
+df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
+plt.plot(df[:, 2])
+plt.show()
+# plt.plot(e.depth_auv)
+# plt.show()
 
 #%%
 # df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
