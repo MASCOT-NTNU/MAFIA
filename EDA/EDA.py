@@ -623,10 +623,10 @@ class EDA:
         return fig
 
     def assimilate_data(self, dataset):
-        print("dataset before filtering: ", dataset[-10:, :])
+        # print("dataset before filtering: ", dataset[-10:, :])
         ind_remove_noise_layer = np.where(np.abs(dataset[:, 2]) >= MIN_DEPTH_FOR_DATA_ASSIMILATION)[0]
         dataset = dataset[ind_remove_noise_layer, :]
-        print("dataset after filtering: ", dataset[-10:, :])
+        # print("dataset after filtering: ", dataset[-10:, :])
         t1 = time.time()
         dx = (vectorise(dataset[:, 0]) @ np.ones([1, self.N_gmrf_grid]) -
               np.ones([dataset.shape[0], 1]) @ vectorise(self.gmrf_grid[:, 0]).T) ** 2
@@ -646,7 +646,7 @@ class EDA:
             std_assimilated[i] = np.std(dataset[ind_selected, 3])
         print("Data assimilation takes: ", t2 - t1)
         self.auv_data = []
-        print("Reset auv_data: ", self.auv_data)
+        # print("Reset auv_data: ", self.auv_data)
         return ind_assimilated, vectorise(salinity_assimilated), vectorise(std_assimilated)
 
     def plot_variogram(self):
@@ -665,9 +665,34 @@ class EDA:
         )])
         pass
 
+    def save_auv_data_4_martin(self):
+        self.data = np.empty([0, 3])
+        step = 30
+        for i in range(0, len(self.lat_auv), step):
+            print(i)
+            if i + step <= len(self.lat_auv):
+                lat = self.lat_auv[i:i+step]
+                lon = self.lon_auv[i:i+step]
+                depth = self.depth_auv[i:i+step]
+                sal = self.salinity_auv[i:i+step]
+            else:
+                lat = self.lat_auv[i:]
+                lon = self.lon_auv[i:]
+                depth = self.depth_auv[i:]
+                sal = self.salinity_auv[i:]
+            x, y = latlon2xy(lat, lon, LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+            z = depth
+            dataset = np.vstack((x, y, z, sal)).T
+            ind, sal, std = self.assimilate_data(dataset)
+            data_new = np.vstack((ind, sal.flatten(), std.flatten())).T
+            self.data = np.append(self.data, data_new, axis=0)
+        df = pd.DataFrame(self.data, columns=['ind', 'salinity', 'std'])
+        df.to_csv(FILEPATH + "data4martin.csv", index=False)
+        print("data is saved successfully!")
 
 if __name__ == "__main__":
     e = EDA()
+    # e.save_auv_data_4_martin()
     # e.load_sinmod_data(data_exists=True)
     # e.plot_scatter_data()
     # e.plot_sinmod()
@@ -677,6 +702,38 @@ if __name__ == "__main__":
     # e.plot_variogram()
     # e.plot_sinmod_layer()
     # e.save_grid_to_gis()
+
+#%%
+# plt.plot(e.lon_auv, e.lat_auv, 'k.')
+# plt.show()
+df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
+plt.plot(df[:, 2])
+plt.show()
+# plt.plot(e.depth_auv)
+# plt.show()
+
+#%%
+# df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
+# ind = df[:, 0].astype(int)
+# sal = df[:, 1]
+# std = df[:, 2]
+# ind_s = ind[:400]
+ind_s = e.data[:250, 0].astype(int)
+
+plt.plot(e.gmrf_grid[:, 1], e.gmrf_grid[:, 0], 'k.')
+plt.plot(e.gmrf_grid[ind_s, 1], e.gmrf_grid[ind_s, 0], 'r.')
+plt.show()
+#%%
+
+x, y = latlon2xy(e.lat_auv[:100], e.lon_auv[:100], LATITUDE_ORIGIN, LONGITUDE_ORIGIN)
+z = e.depth_auv[:100]
+sal = e.salinity_auv[:100]
+dataset = np.vstack((x, y, z, sal)).T
+ind, s, std = e.assimilate_data(dataset)
+
+plt.plot(e.gmrf_grid[:, 1], e.gmrf_grid[:, 0], 'k.')
+plt.plot(e.gmrf_grid[ind, 1], e.gmrf_grid[ind, 0], 'r.')
+plt.show()
 
 
 #%%
@@ -873,23 +930,3 @@ fig.update_layout(
 plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
 
 
-#%%
-self = e
-def is_location_valid(lat, lon):
-    isvalid = 1
-    point = Point(lat, lon)
-    if self.polygon_obstacle_shapely.contains(point) or not self.polygon_border_shapely.contains(point):
-        isvalid = 0
-    return isvalid
-
-valid_matrix = np.ones_like(lat)
-for i in range(valid_matrix.shape[0]):
-    for j in range(valid_matrix.shape[1]):
-        valid_matrix[i, j] = is_location_valid(lat[i, j], lon[i, j])
-
-#%%
-ind_row = np.where(valid_matrix == True)[0]
-ind_col = np.where(valid_matrix == True)[1]
-
-#%%
-plt.contour(e.lon_sinmod[ind_row, ind_col], e.lat_sinmod[ind_row, ind_col], sal[ind_row, ind_col], levels=levels, cmap=get_cmap("BrBG", 10), vmin=10, vmax=30)
