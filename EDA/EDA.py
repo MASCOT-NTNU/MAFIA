@@ -930,12 +930,3 @@ fig.update_layout(
 plotly.offline.plot(fig, filename=FIGPATH + "SINMOD.html", auto_open=True)
 
 
-#%%
-df = pd.read_csv(FILEPATH + "data4martin.csv").to_numpy()
-ind = df[:, 0].astype(int)
-plt.scatter(e.gmrf_grid[ind[:100], 1], e.gmrf_grid[ind[:100], 0], c=df[:100
-, 1])
-plt.colorbar()
-plt.show()
-
-
